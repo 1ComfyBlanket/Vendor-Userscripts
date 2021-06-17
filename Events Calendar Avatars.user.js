@@ -2,7 +2,7 @@
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
 // @version      1.1.6
-// @update       https://github.com/1ComfyBlanket/Covey-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
+// @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
