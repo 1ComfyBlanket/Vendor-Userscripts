@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.1.3
+// @version      1.1.4
 // @update       https://github.com/1ComfyBlanket/Covey-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -71,13 +71,15 @@ function searchEmail() {
 let profileName
 let emailButtonArray = [];
 let emailHandle
+let emailSectionArrayLength
+let emailFinderTabClass = 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-gray-800 text-gray-900 '
 function createSocialMediaButton() {
     // For checking against the currently selected profile
     let profileNameArray = document.getElementsByClassName('text-xl font-normal text-gray-900 truncate -mb-1');
     let emailSectionArray = document.getElementsByClassName('text-sm text-gray-900 font-semibold');
     if (profileNameArray.length === 0 || emailSectionArray.length === 0) { return };
-    // if (profileName !== profileNameArray[0].innerHTML.split('<')[0].toLowerCase()) {
-    if (emailHandle !== emailSectionArray[0].innerText.split('@')[0]) {
+    let emailFinderTab = document.getElementsByClassName('-mb-px flex space-x-8')[0].children[0].className;
+    if ((emailHandle !== emailSectionArray[0].innerText.split('@')[0] || emailSectionArrayLength) && emailFinderTab !== emailFinderTabClass) {
         for (let i = 0; i < emailButtonArray.length; i++) {
             // Destroy all search buttons when profile changes
             emailButtonArray[i].remove();
@@ -89,6 +91,7 @@ function createSocialMediaButton() {
     };
     profileName = profileNameArray[0].innerHTML.split('<')[0].toLowerCase();
     emailHandle = emailSectionArray[0].innerText.split('@')[0];
+    emailSectionArrayLength = emailSectionArray.length;
 
     // Individual email sections are put into an array
     emailSectionArray = document.getElementsByClassName('text-sm text-gray-900 font-semibold');
@@ -102,11 +105,9 @@ function createSocialMediaButton() {
         // Check if user is in the "Email finder" tab
         let matchConfidence = 0
         let abbreviatedNameArray = []
-        let emailFinderTab = document.getElementsByClassName('-mb-px flex space-x-8')[0].children[0].className;
-        if(emailFinderTab === 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-gray-800 text-gray-900 ') {
+        if(emailFinderTab === emailFinderTabClass) {
             // Filter out emails if they are abbreviated and 0% match confidence
             if (profileNameArray.length === 0) { continue };
-            // profileName = profileNameArray[0].innerHTML.split('<')[0].toLowerCase();
             let profileNameSplit = profileName.split(' ');                                                        // [john, smith]
             // Generate abbreviated versions of this name
             abbreviatedNameArray.push(`${profileNameSplit[0].charAt(0)}${profileNameSplit[1]}`);                  // jsmith
