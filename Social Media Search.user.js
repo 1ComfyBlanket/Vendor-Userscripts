@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.1.1
+// @version      1.1.2
 // @update       https://github.com/1ComfyBlanket/Covey-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -74,10 +74,7 @@ let emailSectionArray = [];
 function createSocialMediaButton() {
     // For checking against the currently selected profile
     let profileNameArray = document.getElementsByClassName('text-xl font-normal text-gray-900 truncate -mb-1');
-    if (profileNameArray.length === 0) {
-        setTimeout(() => { createSocialMediaButton() }, 200);
-        return;
-    };
+    if (profileNameArray.length === 0) { return };
     if (profileName !== profileNameArray[0].innerHTML.split('<')[0].toLowerCase()) {
         for (let i = 0; i < emailButtonArray.length; i++) {
             // Destroy all search buttons when profile changes
