@@ -2,7 +2,7 @@
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
 // @version      1.1.5
-// @update       https://github.com/1ComfyBlanket/Covey-Userscripts/raw/main/Social%20Media%20Search.user.js
+// @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @match        https://acornapp.net/*
