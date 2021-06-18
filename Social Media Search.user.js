@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.1.5
+// @version      1.1.6
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -141,6 +141,8 @@ function createSocialMediaButton() {
         //Set className for CSS
         socialMediaButton.className = 'searchButton';
     };
+    // Reset emailHandle to the first index as this is being compared to determine if the profile changed
+    emailHandle = emailSectionArray[0].innerText.split('@')[0];
 }
 
 

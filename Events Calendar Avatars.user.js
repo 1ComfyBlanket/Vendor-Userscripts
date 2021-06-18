@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.1.6
+// @version      1.1.7
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -53,12 +53,12 @@ addGlobalStyle(`
 if (location.hostname === 'calendar.google.com') {
     setTimeout(() => {
         // Create and place button for opening avatars
-        let openAvatarsButton = document.createElement('a');
+        const openAvatarsButton = document.createElement('a');
         openAvatarsButton.addEventListener('click', countEmails, false);
         openAvatarsButton.appendChild(document.createTextNode('Open Images'));
 
         // "kx3Hed" is the "Guests" tab
-        let openAvatar = document.getElementsByClassName("kx3Hed")[0];
+        const openAvatar = document.getElementsByClassName("kx3Hed")[0];
         openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling);
 
         //Set className for CSS
@@ -67,10 +67,10 @@ if (location.hostname === 'calendar.google.com') {
         function countEmails() {
             // Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
             // "jPtXgd" is all of the listed email avatars
-            let imageArray = document.getElementsByClassName('jPtXgd');
+            const imageArray = document.getElementsByClassName('jPtXgd');
             for (let i = 0; i < imageArray.length; i++) {
                 // Retrieve email
-                let email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0];
+                const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0];
                 // Retrieve avatar URL
                 let imageLink = imageArray[i].outerHTML.split('"')[7].split('&quot;')[1].split('s24');
                 imageLink = `${imageLink[0]}s1000${imageLink[1]}`;
@@ -90,11 +90,14 @@ if (location.hostname === 'calendar.google.com') {
             padding:4px 8px;
         }
     `);
-    let email = await GM.getValue(window.location.href);
-    let copyEmail = document.createElement('a');
-    copyEmail.addEventListener('click', () =>{ GM.setClipboard(email) }, false);
-    copyEmail.appendChild(document.createTextNode(email));
-    let emaiLPosition = document.getElementsByTagName("body")[0];
-    emaiLPosition.parentNode.insertBefore(copyEmail, emaiLPosition);
-    copyEmail.className = "searchButton";
+    const email = await GM.getValue(window.location.href);
+    // Delay added to give time for GM values to load and prevent the 'undefined' error
+    setTimeout(() => {      
+        const copyEmail = document.createElement('a');
+        copyEmail.addEventListener('click', () =>{ GM.setClipboard(email) }, false);
+        copyEmail.appendChild(document.createTextNode(email));
+        const emaiLPosition = document.getElementsByTagName("body")[0];
+        emaiLPosition.parentNode.insertBefore(copyEmail, emaiLPosition);
+        copyEmail.className = "searchButton";
+    }, 200);
 }
