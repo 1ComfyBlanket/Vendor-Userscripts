@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.1.7
+// @version      1.1.8
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -16,12 +16,12 @@
 // Inject CSS into the page
 function addGlobalStyle(css) {
     let head, style;
-    head = document.getElementsByTagName('head')[0];
-    if (!head) { return; }
-    style = document.createElement('style');
-    style.type = 'text/css';
-    style.innerHTML = css;
-    head.appendChild(style);
+    head = document.getElementsByTagName('head')[0]
+    if (!head) { return }
+    style = document.createElement('style')
+    style.type = 'text/css'
+    style.innerHTML = css
+    head.appendChild(style)
 }
 // Style the button
 addGlobalStyle(`
@@ -48,37 +48,59 @@ addGlobalStyle(`
         position:relative;
         top:1px;
     }
-`);
+`)
+
+// "kx3Hed" is the guest tab
+function guestTab() { return document.getElementsByClassName("kx3Hed") }
+
+// Create and place button for opening avatars
+function createButton() {
+    const openAvatarsButton = document.createElement('a')
+    openAvatarsButton.addEventListener('click', openEmailAvatars, false)
+    openAvatarsButton.appendChild(document.createTextNode('Open Images'))
+    const openAvatar = guestTab()[0]
+    openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling)
+
+    //Set className for CSS
+    openAvatarsButton.className = "searchButton"
+
+
+}
+
+    // Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
+function openEmailAvatars() {
+    // "jPtXgd" is all of the listed email avatars
+    const imageArray = document.getElementsByClassName('jPtXgd')
+    for (let i = 0; i < imageArray.length; i++) {
+            // Retrieve email
+            const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0]
+            // Retrieve avatar URL
+            let imageLink = imageArray[i].outerHTML.split('"')[7].split('&quot;')[1].split('s24')
+            imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+            GM.setValue(imageLink, email)
+            window.open(imageLink)
+    }
+}
+
+// Create a button with the profile's email that can be clicked to copy to cliboard
+async function copyEmailClipboard() {
+    const email = await GM.getValue(window.location.href)
+    const copyEmail = document.createElement('a')
+    copyEmail.addEventListener('click', () =>{ GM.setClipboard(email) }, false)
+    copyEmail.appendChild(document.createTextNode(email))
+    const emaiLPosition = document.getElementsByTagName("body")[0]
+    emaiLPosition.parentNode.insertBefore(copyEmail, emaiLPosition)
+    copyEmail.className = "searchButton"
+}
 
 if (location.hostname === 'calendar.google.com') {
-    setTimeout(() => {
-        // Create and place button for opening avatars
-        const openAvatarsButton = document.createElement('a');
-        openAvatarsButton.addEventListener('click', countEmails, false);
-        openAvatarsButton.appendChild(document.createTextNode('Open Images'));
-
-        // "kx3Hed" is the "Guests" tab
-        const openAvatar = document.getElementsByClassName("kx3Hed")[0];
-        openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling);
-
-        //Set className for CSS
-        openAvatarsButton.className = "searchButton";
-
-        function countEmails() {
-            // Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
-            // "jPtXgd" is all of the listed email avatars
-            const imageArray = document.getElementsByClassName('jPtXgd');
-            for (let i = 0; i < imageArray.length; i++) {
-                // Retrieve email
-                const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0];
-                // Retrieve avatar URL
-                let imageLink = imageArray[i].outerHTML.split('"')[7].split('&quot;')[1].split('s24');
-                imageLink = `${imageLink[0]}s1000${imageLink[1]}`;
-                GM.setValue(imageLink, email);
-                window.open(imageLink);
-            };
+    // Wait until guest tab exists
+    const waitUntilGuestTab = setInterval(() => {
+        if (guestTab().length) {
+            clearInterval(waitUntilGuestTab)
+            createButton()
         }
-    }, 2000);
+    }, 10)
 
 // Run on lh3.googleusercontent.com
 } else {
@@ -90,14 +112,12 @@ if (location.hostname === 'calendar.google.com') {
             padding:4px 8px;
         }
     `);
-    const email = await GM.getValue(window.location.href);
-    // Delay added to give time for GM values to load and prevent the 'undefined' error
-    setTimeout(() => {      
-        const copyEmail = document.createElement('a');
-        copyEmail.addEventListener('click', () =>{ GM.setClipboard(email) }, false);
-        copyEmail.appendChild(document.createTextNode(email));
-        const emaiLPosition = document.getElementsByTagName("body")[0];
-        emaiLPosition.parentNode.insertBefore(copyEmail, emaiLPosition);
-        copyEmail.className = "searchButton";
-    }, 200);
+    // Wait until body exists
+    const waitUntilBody = setInterval(() => {
+        if (document.getElementsByTagName('img').length) {
+            clearInterval(waitUntilBody)
+            copyEmailClipboard()
+        }
+    }, 10)
+
 }
