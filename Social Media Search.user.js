@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
+// @version      1.2.1
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -87,9 +87,11 @@ function searchEmail() {
 function missingProfileElement(elementClass, stringReturn, type = 0) {
     const intervalCheck = setInterval(() => {
         if (type === 0 && document.getElementsByClassName(elementClass).length) {
-            clearInterval(intervalCheck)
             for (let i = 0; i < document.getElementsByClassName(elementClass).length; i++) {
-                if (document.getElementsByClassName(elementClass)[i].innerText.includes(stringReturn)) { close() }
+                if (document.getElementsByClassName(elementClass)[i].innerText.includes(stringReturn)) {
+                    close()
+                    clearInterval(intervalCheck)
+                }
             }
         }
         if (type === 1 && document.title.includes(stringReturn)) {
@@ -105,9 +107,9 @@ function missingProfileElement(elementClass, stringReturn, type = 0) {
 
 // Social media sites run this function to determine if it is a missing profile
 function missingProfile() {
-    switch (location.hostname){
+    switch (location.hostname) {
         case 'www.instagram.com':
-            missingProfileElement('_7UhW9      x-6xq    qyrsm KV-D4          uL8Hv     l4b0S    ', `Sorry, this page isn't available.`)
+            missingProfileElement('', `Content Unavailable • Instagram`, 1)
             break
         case 'www.pinterest.com':
             missingProfileElement('', `show_error=true`, 2)
@@ -124,7 +126,7 @@ function missingProfile() {
             missingProfileElement('jsx-1517828681 recommend-desc', `Check out more trending videos on TikTok`)
             break
         case 'www.facebook.com':
-            missingProfileElement('d2edcug0 hpfvmrgz qv66sw1b c1et5uql lr9zc1uh a8c37x1j keod5gw0 nxhoafnm aigsh9s9 ns63r2gh fe6kdd0r mau55g9w c8b282yb iv3no6db o3w64lxj b2s5l15y hnhda86s m9osqain oqcyycmt', `This Page Isn't Available`)
+            missingProfileElement('d2edcug0', `This Page Isn't Available`)
             break
         case 'www.youtube.com':
             missingProfileElement('', `404 Not Found`, 1)
