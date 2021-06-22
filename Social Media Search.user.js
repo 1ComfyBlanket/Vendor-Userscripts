@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.2.2
+// @version      1.2.3
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -80,7 +80,7 @@ function searchEmail() {
     window.open(`https://www.etsy.com/people/${emailHandle}`)
     window.open(`https://www.poshmark.com/closet/${emailHandle}`)
     window.open(`https://www.tripadvisor.com/Profile/${emailHandle}`)
-    window.open(`https://www.medium.com/@${emailHandle}`)
+    window.open(`https://www.medium.com/@${emailHandle}/about`)
 }
 
 // Element and string to search for to determine if a profile is missing
@@ -150,10 +150,7 @@ function missingProfile() {
             
     }
 }
-if (location.hostname !== 'acornapp.net') {
-    missingProfile()
-    return
-}
+if (location.hostname !== 'acornapp.net') { missingProfile() }
 
 
 // Global vars
@@ -229,7 +226,8 @@ function createSocialMediaButton() {
             else { divEmailSectionsNum = 2 }
             matchConfidence = divEmailSections[divEmailSectionsNum].children[0].children[1].innerText[0]
 
-            // Do no create a button if the email has 0% match confidence && is an abbreviation
+            // Do not create a button if the email has 0% match confidence && is an abbreviation
+            // === did not work for a matchConfidence comparison in this case
             if (matchConfidence == 0 && abbreviatedNameArray.includes(emailHandle)) { continue }
         }
 
@@ -242,7 +240,7 @@ function createSocialMediaButton() {
         emailButtonArray.push(socialMediaButton)
         //Set className for CSS
         socialMediaButton.className = 'searchButton'
-    };
+    }
     // Reset emailHandle to the first index as this is being compared to determine if the profile changed
     emailHandle = emailSection()
 }
