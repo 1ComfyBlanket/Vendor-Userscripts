@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.2.3
+// @version      1.2.4
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -20,6 +20,8 @@
 // @match        https://poshmark.com/*
 // @match        https://www.tripadvisor.com/*
 // @match        https://medium.com/*
+// @match        https://dribbble.com/*
+// @match        https://www.behance.net/*
 // ==/UserScript==
 
 'use strict';
@@ -81,6 +83,8 @@ function searchEmail() {
     window.open(`https://www.poshmark.com/closet/${emailHandle}`)
     window.open(`https://www.tripadvisor.com/Profile/${emailHandle}`)
     window.open(`https://www.medium.com/@${emailHandle}/about`)
+    window.open(`https://dribbble.com/${emailHandle}`)
+    window.open(`https://www.behance.net/${emailHandle}`)
 }
 
 // Element and string to search for to determine if a profile is missing
@@ -146,6 +150,12 @@ function missingProfile() {
             break       
         case 'medium.com':
             missingProfileElement('dc dd de df dg dh di dj dk dl dm dn da b do dp dq', `404`)
+            break
+        case 'dribbble.com':
+            missingProfileElement('', `Sorry, the page you were looking for doesn't exist. (404)`, 1)
+            break
+        case 'www.behance.net':
+            missingProfileElement('', `Behance :: Oops! We can’t find that page.`, 1)
             break
             
     }

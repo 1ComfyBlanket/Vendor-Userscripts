@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.1.8
+// @version      1.2.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -53,21 +53,26 @@ addGlobalStyle(`
 // "kx3Hed" is the guest tab
 function guestTab() { return document.getElementsByClassName("kx3Hed") }
 
-// Create and place button for opening avatars
+// Create and place buttons
 function createButton() {
+    // "Open Images" button
     const openAvatarsButton = document.createElement('a')
     openAvatarsButton.addEventListener('click', openEmailAvatars, false)
     openAvatarsButton.appendChild(document.createTextNode('Open Images'))
     const openAvatar = guestTab()[0]
     openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling)
-
     //Set className for CSS
     openAvatarsButton.className = "searchButton"
 
-
+    const clearEmailsButtons = document.createElement('a')
+    clearEmailsButtons.addEventListener('click', clearEmailList, false)
+    clearEmailsButtons.appendChild(document.createTextNode('Clear All'))
+    openAvatar.parentNode.insertBefore(clearEmailsButtons, openAvatar.nextSibling.nextSibling)
+    //Set className for CSS
+    clearEmailsButtons.className = "searchButton"
 }
 
-    // Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
+// Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
 function openEmailAvatars() {
     // "jPtXgd" is all of the listed email avatars
     const imageArray = document.getElementsByClassName('jPtXgd')
@@ -79,6 +84,19 @@ function openEmailAvatars() {
             imageLink = `${imageLink[0]}s1000${imageLink[1]}`
             GM.setValue(imageLink, email)
             window.open(imageLink)
+    }
+}
+
+function clearEmailList() {
+    // This is the "Make Optional" and "Remove" array
+    const closeButtonArray = document.getElementsByClassName('U26fgb mUbCce fKz7Od rF3YF Vp20je vPJzRc M9Bg4d')
+    console.log(closeButtonArray)
+    let a = closeButtonArray.length
+    for (let i = 0; i < a; i++) {
+        // Every second entry in the array is the remove button. Removing deletes from the array so cycling
+        // the second index for the length of the array will remove all emails listed
+        closeButtonArray[1].click()
+
     }
 }
 
@@ -119,5 +137,4 @@ if (location.hostname === 'calendar.google.com') {
             copyEmailClipboard()
         }
     }, 10)
-
 }
