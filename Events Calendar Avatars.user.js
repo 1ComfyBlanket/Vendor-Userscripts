@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
+// @version      1.2.1
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -64,6 +64,7 @@ function createButton() {
     //Set className for CSS
     openAvatarsButton.className = "searchButton"
 
+    // "Clear All" button
     const clearEmailsButtons = document.createElement('a')
     clearEmailsButtons.addEventListener('click', clearEmailList, false)
     clearEmailsButtons.appendChild(document.createTextNode('Clear All'))
@@ -90,7 +91,6 @@ function openEmailAvatars() {
 function clearEmailList() {
     // This is the "Make Optional" and "Remove" array
     const closeButtonArray = document.getElementsByClassName('U26fgb mUbCce fKz7Od rF3YF Vp20je vPJzRc M9Bg4d')
-    console.log(closeButtonArray)
     let a = closeButtonArray.length
     for (let i = 0; i < a; i++) {
         // Every second entry in the array is the remove button. Removing deletes from the array so cycling
