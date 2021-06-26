@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.2.4
+// @version      1.3.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -51,7 +51,7 @@ addGlobalStyle(`
         padding:4px 12px;
         text-decoration:none;
         text-shadow:0px 1px 0px #154682;
-        margin-left: 5px;
+        margin-left: 10px;
     }
     .searchButton:hover {
         background-color:#0061a7;
@@ -64,18 +64,15 @@ addGlobalStyle(`
 
 
 function searchEmail() {
-    let email = this.nextSibling.value;
-    let emailHandle = this.nextSibling.value.split("@", 1)[0]
+    const emailHandle = this.nextSibling.value.split("@", 1)[0]
     // Some websites do not accept usernames with periods
     let emailHandlePeriod = false
     if (emailHandle.includes('.')) { emailHandlePeriod = true }
-    window.open(`https://www.google.com/search?q="${email}"`)
-    window.open(`https://www.google.com/search?q="${emailHandle}"`)
     window.open(`https://www.instagram.com/${emailHandle}`)
     window.open(`https://www.pinterest.com/${emailHandle}`)
     window.open(`https://www.twitter.com/${emailHandle}`)
     if (emailHandlePeriod === false) { window.open(`https://www.github.com/${emailHandle}`) }
-    window.open(`https://www.tiktok.com/${emailHandle}`)
+    window.open(`https://www.tiktok.com/@${emailHandle}`)
     window.open(`https://www.facebook.com/${emailHandle}`)
     window.open(`https://www.youtube.com/user/${emailHandle}`)
     window.open(`https://www.soundcloud.com/${emailHandle}`)
@@ -87,24 +84,64 @@ function searchEmail() {
     window.open(`https://www.behance.net/${emailHandle}`)
 }
 
+function googleEmail() {
+    const email = this.nextSibling.nextSibling.value;
+    const emailHandle = this.nextSibling.nextSibling.value.split("@", 1)[0]
+    window.open(`https://www.google.com/search?q="${email}"`)
+    window.open(`https://www.google.com/search?q="${emailHandle}"`)
+}
+
 // Element and string to search for to determine if a profile is missing
-function missingProfileElement(elementClass, stringReturn, type = 0) {
+function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
+    function closeClear() {
+        close()
+        clearInterval(intervalCheck)
+    }
+    function elementArray() {
+        return document.getElementsByClassName(elementClass)
+    }
     const intervalCheck = setInterval(() => {
-        if (type === 0 && document.getElementsByClassName(elementClass).length) {
-            for (let i = 0; i < document.getElementsByClassName(elementClass).length; i++) {
-                if (document.getElementsByClassName(elementClass)[i].innerText.includes(stringReturn)) {
-                    close()
-                    clearInterval(intervalCheck)
+        // If exactMatch is enabled then make sure the string is exactly the same, otherwise just loosely search
+        // for the string within the element
+        if (exactMatch === 0) {
+            for (let i = 0; i < elementArray().length; i++) {
+                if (elementArray()[i].innerText) {
+                    if (elementArray()[i].innerText.includes(stringReturn)) {
+                        closeClear()
+                    }
+                }
+                if (elementArray()[i].currentSrc) {
+                    if (elementArray()[i].currentSrc.includes(stringReturn)) {
+                        closeClear()
+                    }
                 }
             }
-        }
-        if (type === 1 && document.title.includes(stringReturn)) {
-            close()
-            clearInterval(intervalCheck)
-        }
-        if (type === 2 && location.href.includes(stringReturn)) {
-            close()
-            clearInterval(intervalCheck)
+            if (document.title.includes(stringReturn)) {
+                closeClear()
+            }
+            if (location.href.includes(stringReturn)) {
+                closeClear()
+            }
+        // Check for an exact string match
+        } else {
+            for (let i = 0; i < elementArray().length; i++) {
+                if (elementArray()[i].innerText) {
+                    if (elementArray()[i].innerText === stringReturn) {
+                        closeClear()
+                    }
+                }
+                if (elementArray()[i].currentSrc) {
+                    if (elementArray()[i].currentSrc === stringReturn) {
+                        closeClear()
+                    }
+                }
+            }
+            if (document.title === stringReturn) {
+                closeClear()
+            }
+            if (location.href === stringReturn) {
+                closeClear()
+            }
         }
     }, 200)
 }
@@ -113,55 +150,58 @@ function missingProfileElement(elementClass, stringReturn, type = 0) {
 function missingProfile() {
     switch (location.hostname) {
         case 'www.instagram.com':
-            missingProfileElement('', `Content Unavailable • Instagram`, 1)
-            missingProfileElement('', `Page Not Found • Instagram`, 1)
+            missingProfileElement('', ` • Instagram`)
             break
         case 'www.pinterest.com':
-            missingProfileElement('', `show_error=true`, 2)
+            missingProfileElement('', `show_error=true`)
+            missingProfileElement('', `Pinterest`, 1)
             break
         case 'twitter.com':
-            missingProfileElement('css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0', `Hmm...this page doesn’t exist. Try searching for something else.`)
-            missingProfileElement('css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0', `This account doesn’t exist`)
+            missingProfileElement('css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0', `doesn’t exist`)
+            missingProfileElement('css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0', `no existe`)
             break
         case 'github.com':
             missingProfileElement('blue-button text-button', `Reload`)
             missingProfileElement('d-block text-normal color-text-secondary mb-1 f4', `Find code, projects, and people on GitHub:`)
             break
         case 'www.tiktok.com':
-            missingProfileElement('jsx-1517828681 recommend-desc', `Check out more trending videos on TikTok`)
+            missingProfileElement('jsx-1517828681', `404_face_icon`)
+            missingProfileElement('jsx-3565499374', `No encontramos esta cuenta`)
+            missingProfileElement('jsx-3565499374', `Couldn't find this account`)
             break
         case 'www.facebook.com':
-            missingProfileElement('d2edcug0', `This Page Isn't Available`)
+            missingProfileElement('hu5pjgll', `/404/404`)
             break
         case 'www.youtube.com':
-            missingProfileElement('', `404 Not Found`, 1)
+            missingProfileElement('', `404`)
             break
         case 'soundcloud.com':
-            missingProfileElement('', `Something went wrong on SoundCloud`, 1)
+            missingProfileElement('', `Something went wrong on SoundCloud`)
             break
         case 'www.etsy.com':
             missingProfileElement('wt-text-heading-01 wt-pb-xs-2', `Uh oh!`)
+            missingProfileElement('wt-text-heading-01 wt-pb-xs-2', `Vaya.`)
             break
         case 'poshmark.com':
-            missingProfileElement('', `Page Not Found - Poshmark`, 1)
+            missingProfileElement('', `Page Not Found - Poshmark`)
             break
         case 'www.tripadvisor.com':
-            missingProfileElement('', `404 Not Found - Tripadvisor`, 1)
-            break       
+            missingProfileElement('', `404`)
+            break
         case 'medium.com':
             missingProfileElement('dc dd de df dg dh di dj dk dl dm dn da b do dp dq', `404`)
             break
         case 'dribbble.com':
-            missingProfileElement('', `Sorry, the page you were looking for doesn't exist. (404)`, 1)
+            missingProfileElement('', `404`)
             break
         case 'www.behance.net':
-            missingProfileElement('', `Behance :: Oops! We can’t find that page.`, 1)
+            missingProfileElement('', `Behance :: Oops! We can’t find that page.`)
+            missingProfileElement('', `¡Vaya! No ha sido`)
             break
-            
+
     }
 }
 if (location.hostname !== 'acornapp.net') { missingProfile() }
-
 
 // Global vars
 let profileName
@@ -187,7 +227,7 @@ function emaiLtask() {
     if (profileNameArray.length !== 0 || emailSectionArray.length !== 0) { createSocialMediaButton() }
 }
 
-    // Destroy all search buttons when profile changes or if new emails are found in Github finder
+// Destroy all search buttons when profile changes or if new emails are found in Github finder
 function clearOldButtons() {
     if  ( emailSection().length === 'undefined' ) { return }
     emailFinderTab = document.getElementsByClassName('-mb-px flex space-x-8')[0].children[0].className
@@ -231,7 +271,7 @@ function createSocialMediaButton() {
             let divEmailSections = emailSectionArray[i].parentElement.parentElement.nextSibling.children
             // If profile has an avatar search one child further
             let divEmailSectionsNum
-                // Only retrieves first value of the string since 0 will always be lowest
+            // Only retrieves first value of the string since 0 will always be lowest
             if (divEmailSections.length === 4) { divEmailSectionsNum = 3 }
             else { divEmailSectionsNum = 2 }
             matchConfidence = divEmailSections[divEmailSectionsNum].children[0].children[1].innerText[0]
@@ -240,16 +280,22 @@ function createSocialMediaButton() {
             // === did not work for a matchConfidence comparison in this case
             if (matchConfidence == 0 && abbreviatedNameArray.includes(emailHandle)) { continue }
         }
-
-        // Create and place the Search button
-        let socialMediaButton = document.createElement('a')
+        // Create and place the social media search button
+        const socialMediaButton = document.createElement('a')
         socialMediaButton.addEventListener('click', searchEmail, false)
-        socialMediaButton.appendChild(document.createTextNode('Search'))
+        socialMediaButton.appendChild(document.createTextNode('Social'))
         emailButton.parentNode.insertBefore(socialMediaButton, emailButton.nextSibling.nextSibling)
+        // Create and place the Google search button
+        const googleButton = document.createElement('a')
+        googleButton.addEventListener('click', googleEmail, false)
+        googleButton.appendChild(document.createTextNode('Google'))
+        emailButton.parentNode.insertBefore(googleButton, emailButton.nextSibling.nextSibling)
         // Add to  button array for deletion when profile changes
         emailButtonArray.push(socialMediaButton)
+        emailButtonArray.push(googleButton)
         //Set className for CSS
         socialMediaButton.className = 'searchButton'
+        googleButton.className = 'searchButton'
     }
     // Reset emailHandle to the first index as this is being compared to determine if the profile changed
     emailHandle = emailSection()
