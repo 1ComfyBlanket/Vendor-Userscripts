@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
+// @version      1.3.1
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -150,7 +150,10 @@ function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
 function missingProfile() {
     switch (location.hostname) {
         case 'www.instagram.com':
-            missingProfileElement('', ` • Instagram`)
+            missingProfileElement('', `Page Not Found • Instagram`)
+            missingProfileElement('', `Content Unavailable • Instagram`)
+            missingProfileElement('', `Página no encontrada • Instagram`)
+            missingProfileElement('', `Contenido no disponible • Instagram`)
             break
         case 'www.pinterest.com':
             missingProfileElement('', `show_error=true`)
