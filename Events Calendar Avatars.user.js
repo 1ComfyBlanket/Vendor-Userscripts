@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.2.1
+// @version      1.3.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
 // @match        https://lh3.googleusercontent.com/*
+// @match        https://acornapp.net/*
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -73,10 +74,13 @@ function createButton() {
     clearEmailsButtons.className = "searchButton"
 }
 
+// "jPtXgd" is all of the listed email avatars
+function emailAvatars() { return document.getElementsByClassName('jPtXgd') }
+
 // Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
 function openEmailAvatars() {
     // "jPtXgd" is all of the listed email avatars
-    const imageArray = document.getElementsByClassName('jPtXgd')
+    const imageArray = emailAvatars()
     for (let i = 0; i < imageArray.length; i++) {
             // Retrieve email
             const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0]
@@ -85,6 +89,10 @@ function openEmailAvatars() {
             imageLink = `${imageLink[0]}s1000${imageLink[1]}`
             GM.setValue(imageLink, email)
             window.open(imageLink)
+    }
+    if (autoEmailProcess) {
+        autoEmailProcess = false
+        clearEmailList()
     }
 }
 
@@ -111,6 +119,25 @@ async function copyEmailClipboard() {
     copyEmail.className = "searchButton"
 }
 
+async function autoEmailInput() {
+    GM.setValue('emailTask', 'false')
+    // Simulate a React change in order to change the value of an input field
+    const input = document.querySelector("#tabGuests > div.YxiWic.mCosT > div > span > div > div.d1dlne.WvJxMd > div.rFrNMe.Ax4B8.ULpymb.zKHdkd.Tyc9J > div.aCsJod.oJeWuf > div > div.Xb9hP > input")
+    const lastValue = input.value
+    input.value = await GM.getValue('emaiList')
+    const event = new Event('input', { bubbles: true })
+    event.simulated = true
+    const tracker = input._valueTracker
+    if (tracker) { tracker.setValue(lastValue) }
+    input.dispatchEvent(event)
+
+    // Simulate enter key to input emails
+    const enterKey = new KeyboardEvent("keydown", {
+        bubbles: true, cancelable: true, keyCode: 13
+    });
+    input.dispatchEvent(enterKey)
+}
+
 if (location.hostname === 'calendar.google.com') {
     // Wait until guest tab exists
     const waitUntilGuestTab = setInterval(() => {
@@ -119,9 +146,10 @@ if (location.hostname === 'calendar.google.com') {
             createButton()
         }
     }, 10)
+    setInterval(checkEmails, 100)
+}
 
-// Run on lh3.googleusercontent.com
-} else {
+if (location.hostname === 'lh3.googleusercontent.com') {
     addGlobalStyle(`
         .searchButton {
             text-transform: none;
@@ -138,3 +166,29 @@ if (location.hostname === 'calendar.google.com') {
         }
     }, 10)
 }
+
+// Automatically open gcal avatars after clicking on "Copy Emails" in Acorn
+let copyEmailsButton
+let autoEmailProcess
+function copyEmails() {
+    // Add event handler to "Copy Emails" button
+    copyEmailsButton = document.querySelector("#react-root > div > div > div > div.flex.flex-col.min-w-0.flex-1.overflow-hidden > div > main > article > div.mx-auto.pb-24 > div > div.fixed.bg-white.py-4.px-8.z-10.border-b.border-b-eee > div > div.ml-6.mt-0\\.5 > div")
+    if (!copyEmailsButton) { return }
+    copyEmailsButton.removeEventListener('click', openCalendar)
+    copyEmailsButton.addEventListener('click', openCalendar, false)
+}
+
+function openCalendar() {
+    GM.setValue('emaiList', copyEmailsButton.children[2].value)
+    GM.setValue('emailTask', 'true')
+}
+
+async function checkEmails() {
+    const emailTaskExists = await GM.getValue('emailTask')
+    const emailList = await GM.getValue('emaiList')
+    if (emailTaskExists !== 'true' || emailList === '') { return }
+    autoEmailProcess = true
+    autoEmailInput()
+}
+
+if (location.hostname === 'acornapp.net') { setInterval(copyEmails, 100) }

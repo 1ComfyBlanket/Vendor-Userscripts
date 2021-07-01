@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.3.1
+// @version      1.3.2
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -122,7 +122,7 @@ function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
             if (location.href.includes(stringReturn)) {
                 closeClear()
             }
-        // Check for an exact string match
+            // Check for an exact string match
         } else {
             for (let i = 0; i < elementArray().length; i++) {
                 if (elementArray()[i].innerText) {
@@ -174,6 +174,7 @@ function missingProfile() {
             break
         case 'www.facebook.com':
             missingProfileElement('hu5pjgll', `/404/404`)
+            missingProfileElement('mvl img', `U4B06nLMGQt`)
             break
         case 'www.youtube.com':
             missingProfileElement('', `404`)
@@ -193,6 +194,7 @@ function missingProfile() {
             break
         case 'medium.com':
             missingProfileElement('dc dd de df dg dh di dj dk dl dm dn da b do dp dq', `404`)
+            missingProfileElement('ck dw dx dy dz ea eb ec ed ee ef eg du b eh ei ej', `404`)
             break
         case 'dribbble.com':
             missingProfileElement('', `404`)
@@ -230,10 +232,13 @@ function emaiLtask() {
     if (profileNameArray.length !== 0 || emailSectionArray.length !== 0) { createSocialMediaButton() }
 }
 
+// Array that contains the email finder tab
+function emailFinderTabArray() { return document.getElementsByClassName('-mb-px flex space-x-8') }
+
 // Destroy all search buttons when profile changes or if new emails are found in Github finder
 function clearOldButtons() {
-    if  ( emailSection().length === 'undefined' ) { return }
-    emailFinderTab = document.getElementsByClassName('-mb-px flex space-x-8')[0].children[0].className
+    if  ( emailSection().length === 'undefined' || emailFinderTabArray().length === 0) { return }
+    emailFinderTab = emailFinderTabArray()[0].children[0].className
     if (emailHandle !== emailSection() || emailSectionArrayLength !== emailSectionArray.length) {
         for (let i = 0; i < emailButtonArray.length; i++) { emailButtonArray[i].remove() }
         for (let i = 0; i < emailSectionArray.length; i++) {  emailSectionArray[i].removeAttribute('id') }
@@ -258,7 +263,7 @@ function createSocialMediaButton() {
         emailButton.setAttribute('id', idString)
 
         // Check if user is in the "Email finder" tab
-        let matchConfidence = 0
+        let emailDeliver
         let abbreviatedNameArray = []
         if(emailFinderTab === emailFinderTabClassName) {
             // Filter out emails if they are abbreviated and 0% match confidence
@@ -273,15 +278,21 @@ function createSocialMediaButton() {
             emailHandle = emailSectionArray[i].innerText.split('@')[0]
             let divEmailSections = emailSectionArray[i].parentElement.parentElement.nextSibling.children
             // If profile has an avatar search one child further
-            let divEmailSectionsNum
-            // Only retrieves first value of the string since 0 will always be lowest
-            if (divEmailSections.length === 4) { divEmailSectionsNum = 3 }
-            else { divEmailSectionsNum = 2 }
-            matchConfidence = divEmailSections[divEmailSectionsNum].children[0].children[1].innerText[0]
-
-            // Do not create a button if the email has 0% match confidence && is an abbreviation
-            // === did not work for a matchConfidence comparison in this case
-            if (matchConfidence == 0 && abbreviatedNameArray.includes(emailHandle)) { continue }
+            let emailDeliverNum
+            let possibleMatchNum
+            // Search for "Email Deliverability" and "Possible match" status
+            if (divEmailSections.length === 4) {
+                emailDeliverNum = 2
+                possibleMatchNum = 3
+            }
+            else {
+                emailDeliverNum = 1
+                possibleMatchNum = 2
+            }
+            // "Email Deliverability" SVG type
+            emailDeliver = divEmailSections[emailDeliverNum].children[0].children[1].children[6].children[0].children[0].className.baseVal
+            // Do not create a button if the email is not deliverable or if its an abbreviated name without a possible match
+            if (emailDeliver === 'h-6 w-6 inline-block text-red-400' || (abbreviatedNameArray.includes(emailHandle) && divEmailSections[possibleMatchNum].children.length < 2)) { continue }
         }
         // Create and place the social media search button
         const socialMediaButton = document.createElement('a')
@@ -303,6 +314,5 @@ function createSocialMediaButton() {
     // Reset emailHandle to the first index as this is being compared to determine if the profile changed
     emailHandle = emailSection()
 }
-
 
 if (location.hostname === 'acornapp.net') { setInterval(() => { emaiLtask() }, 100) }
