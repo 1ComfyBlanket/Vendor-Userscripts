@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.4.0
+// @version      1.4.1
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -82,14 +82,14 @@ function openEmailAvatars() {
     // "jPtXgd" is all of the listed email avatars
     const imageArray = emailAvatars()
     for (let i = 0; i < imageArray.length; i++) {
-            // Retrieve email
-            const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0]
-            // Retrieve avatar URL
-            let imageLink = imageArray[i].outerHTML.split('"')[7].split('&quot;')[1].split('s24')
-            imageLink = `${imageLink[0]}s1000${imageLink[1]}`
-            GM.setValue(imageLink, email)
-            window.open(imageLink)
-        }
+        // Retrieve email
+        const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0]
+        // Retrieve avatar URL
+        let imageLink = imageArray[i].outerHTML.split('"')[7].split('&quot;')[1].split(upscaleRes)
+        imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+        GM.setValue(imageLink, email)
+        window.open(imageLink)
+    }
     if (autoEmailProcess) {
         autoEmailProcess = false
         clearEmailList()
@@ -193,13 +193,14 @@ async function checkEmails() {
 }
 
 // Upscale avatars; Max size is 40x40, upscaled to 160x160 for sharpness
+const upscaleRes = 's160'
 function imageOuterHTML(image) { return image.outerHTML }
 function upscaleAvatars() {
     const imageArray = emailAvatars()
     for (let i = 0; i < imageArray.length; i++) {
         if (!imageOuterHTML(imageArray[i]).includes('s24')) { continue }
         const imageUpscale = imageOuterHTML(imageArray[i]).split('s24')
-        imageArray[i].outerHTML = `${imageUpscale[0]}s160${imageUpscale[1]}`
+        imageArray[i].outerHTML = `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
         const imageParentUpscale = imageArray[i].parentElement.outerHTML.split('24px;')
         imageArray[i].parentElement.outerHTML = `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;${imageParentUpscale[2]}`
     }
