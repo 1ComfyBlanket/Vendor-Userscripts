@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
+// @version      1.4.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -89,7 +89,7 @@ function openEmailAvatars() {
             imageLink = `${imageLink[0]}s1000${imageLink[1]}`
             GM.setValue(imageLink, email)
             window.open(imageLink)
-    }
+        }
     if (autoEmailProcess) {
         autoEmailProcess = false
         clearEmailList()
@@ -147,6 +147,7 @@ if (location.hostname === 'calendar.google.com') {
         }
     }, 10)
     setInterval(checkEmails, 100)
+    setInterval(upscaleAvatars, 200)
 }
 
 if (location.hostname === 'lh3.googleusercontent.com') {
@@ -189,6 +190,19 @@ async function checkEmails() {
     if (emailTaskExists !== 'true' || emailList === '') { return }
     autoEmailProcess = true
     autoEmailInput()
+}
+
+// Upscale avatars; Max size is 40x40, upscaled to 160x160 for sharpness
+function imageOuterHTML(image) { return image.outerHTML }
+function upscaleAvatars() {
+    const imageArray = emailAvatars()
+    for (let i = 0; i < imageArray.length; i++) {
+        if (!imageOuterHTML(imageArray[i]).includes('s24')) { continue }
+        const imageUpscale = imageOuterHTML(imageArray[i]).split('s24')
+        imageArray[i].outerHTML = `${imageUpscale[0]}s160${imageUpscale[1]}`
+        const imageParentUpscale = imageArray[i].parentElement.outerHTML.split('24px;')
+        imageArray[i].parentElement.outerHTML = `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;${imageParentUpscale[2]}`
+    }
 }
 
 if (location.hostname === 'acornapp.net') { setInterval(copyEmails, 100) }
