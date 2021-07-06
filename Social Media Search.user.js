@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.3.2
+// @version      1.4.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
@@ -86,9 +86,13 @@ function searchEmail() {
 
 function googleEmail() {
     const email = this.nextSibling.nextSibling.value;
-    const emailHandle = this.nextSibling.nextSibling.value.split("@", 1)[0]
+    const emailHandle = this.nextSibling.nextSibling.value.split("@")
     window.open(`https://www.google.com/search?q="${email}"`)
-    window.open(`https://www.google.com/search?q="${emailHandle}"`)
+    window.open(`https://www.google.com/search?q="${emailHandle[0]}"`)
+    // Guess search for handle as a Gmail
+    if (!emailHandle[1].includes('gmail')) {
+        window.open(`https://www.google.com/search?q="${emailHandle[0]}@gmail.com"`)
+    }
 }
 
 // Element and string to search for to determine if a profile is missing
