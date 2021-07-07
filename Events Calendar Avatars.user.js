@@ -213,7 +213,6 @@ if (location.hostname === 'acornapp.net') { setInterval(copyEmails, 100) }
 function copyEmailsAdmin() {
     // Add event handler to "Copy Emails" button
     copyEmailsButton = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > a")
-
     if (!copyEmailsButton) { return }
     copyEmailsButton.removeEventListener('click', openCalendarAdmin)
     copyEmailsButton.addEventListener('click', openCalendarAdmin, false)
@@ -225,4 +224,4 @@ function openCalendarAdmin() {
     GM.setValue('emailTask', 'true')
 }
 
-if (location.href === 'https://getcovey.com/covey/admin#') { setInterval(copyEmailsAdmin, 100) }
+if (location.href.includes('https://getcovey.com/covey/admin')) { setInterval(copyEmailsAdmin, 100) }
