@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
+// @version      1.5.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
 // @match        https://lh3.googleusercontent.com/*
 // @match        https://acornapp.net/*
+// @match        https://getcovey.com/covey/admin*
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -207,3 +208,21 @@ function upscaleAvatars() {
 }
 
 if (location.hostname === 'acornapp.net') { setInterval(copyEmails, 100) }
+
+// Copy email button for admin portal
+function copyEmailsAdmin() {
+    // Add event handler to "Copy Emails" button
+    copyEmailsButton = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > a")
+
+    if (!copyEmailsButton) { return }
+    copyEmailsButton.removeEventListener('click', openCalendarAdmin)
+    copyEmailsButton.addEventListener('click', openCalendarAdmin, false)
+}
+
+function openCalendarAdmin() {
+    const adminEmails = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > input").value
+    GM.setValue('emaiList', adminEmails)
+    GM.setValue('emailTask', 'true')
+}
+
+if (location.href === 'https://getcovey.com/covey/admin#') { setInterval(copyEmailsAdmin, 100) }
