@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.5.0
+// @version      1.5.1
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -219,8 +219,13 @@ function copyEmailsAdmin() {
 }
 
 function openCalendarAdmin() {
-    const adminEmails = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > input").value
-    GM.setValue('emaiList', adminEmails)
+   // const adminEmails = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > input").value
+    let emailList = ''
+    const emailArray = document.getElementsByClassName('block text-center')
+    for (let i = 0; i < emailArray.length; i++) {
+        emailList = `${emailList} ${emailArray[i].innerText}`
+    }
+    GM.setValue('emaiList', emailList)
     GM.setValue('emailTask', 'true')
 }
 
