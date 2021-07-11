@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.5.1
+// @version      1.6.0
 // @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Events%20Calendar%20Avatars.user.js
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
@@ -50,6 +50,15 @@ addGlobalStyle(`
         position:relative;
         top:1px;
     }
+    .exposedEmail {
+        background-color:#ffadad;
+        border-radius:5px;
+        border:1px solid #ff7070;
+        display:inline-block;
+        color:#000000;
+        padding:0px 6px;
+        text-decoration:none;
+    }
 `)
 
 // "kx3Hed" is the guest tab
@@ -84,10 +93,15 @@ function openEmailAvatars() {
     const imageArray = emailAvatars()
     for (let i = 0; i < imageArray.length; i++) {
         // Retrieve email
-        const email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0]
+        let email = imageArray[i].parentElement.previousSibling.outerHTML.split(`data-email="`)[1].split(`" role=`)[0]
+        // Retrieve email for hovercard mismatch comparison
+        const spanEmail = imageArray[i].parentElement.parentElement.nextSibling.children[0].children[0].children[0].children[0].innerText
         // Retrieve avatar URL
         let imageLink = imageArray[i].outerHTML.split('"')[7].split('&quot;')[1].split(upscaleRes)
         imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+        if (!email.replace(/\./g, '').includes(spanEmail.replace(/\./g, '')) && spanEmail.includes('@')) {
+            email = `${email} ${spanEmail}`
+        }
         GM.setValue(imageLink, email)
         window.open(imageLink)
     }
@@ -111,13 +125,16 @@ function clearEmailList() {
 
 // Create a button with the profile's email that can be clicked to copy to cliboard
 async function copyEmailClipboard() {
-    const email = await GM.getValue(window.location.href)
-    const copyEmail = document.createElement('a')
-    copyEmail.addEventListener('click', () =>{ GM.setClipboard(email) }, false)
-    copyEmail.appendChild(document.createTextNode(email))
-    const emaiLPosition = document.getElementsByTagName("body")[0]
-    emaiLPosition.parentNode.insertBefore(copyEmail, emaiLPosition)
-    copyEmail.className = "searchButton"
+    let email = await GM.getValue(window.location.href)
+    email = email.split(' ')
+    for (let i = 0; i < email.length; i++) {
+        const copyEmail = document.createElement('a')
+        copyEmail.addEventListener('click', () => { GM.setClipboard(email[i]) }, false)
+        copyEmail.appendChild(document.createTextNode(email[i]))
+        const emailPosition = document.getElementsByTagName("body")[0]
+        emailPosition.parentNode.insertBefore(copyEmail, emailPosition)
+        copyEmail.className = "searchButton"
+    }
 }
 
 async function autoEmailInput() {
@@ -181,7 +198,8 @@ function copyEmails() {
 }
 
 function openCalendar() {
-    GM.setValue('emaiList', copyEmailsButton.children[2].value)
+    const emailList = gmailGuess(copyEmailsButton.children[2].value)
+    GM.setValue('emaiList', emailList)
     GM.setValue('emailTask', 'true')
 }
 
@@ -195,6 +213,7 @@ async function checkEmails() {
 
 // Upscale avatars; Max size is 40x40, upscaled to 160x160 for sharpness
 const upscaleRes = 's160'
+function spanEmailArray() { return document.getElementsByClassName('cHB8o') }
 function imageOuterHTML(image) { return image.outerHTML }
 function upscaleAvatars() {
     const imageArray = emailAvatars()
@@ -204,6 +223,14 @@ function upscaleAvatars() {
         imageArray[i].outerHTML = `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
         const imageParentUpscale = imageArray[i].parentElement.outerHTML.split('24px;')
         imageArray[i].parentElement.outerHTML = `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;${imageParentUpscale[2]}`
+    }
+    // Scan for hovercard mismatches
+    for (let i = 1; i < spanEmailArray().length; i++) {
+        let spanEmail = spanEmailArray()[i].innerText.replace(/\./g, '')
+        let spanEmailElement = spanEmailArray()[i]
+        let hoverCardEmail = spanEmailArray()[i].parentElement.parentElement.parentElement.parentElement.parentElement.dataset.hovercardId.replace(/\./g, '')
+        if (spanEmail === hoverCardEmail || !spanEmail.includes(('@')) || spanEmailElement.className === 'exposedEmail') { continue }
+        spanEmailElement.className = 'exposedEmail'
     }
 }
 
@@ -219,14 +246,28 @@ function copyEmailsAdmin() {
 }
 
 function openCalendarAdmin() {
-   // const adminEmails = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > input").value
+    // const adminEmails = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > input").value
     let emailList = ''
     const emailArray = document.getElementsByClassName('block text-center')
     for (let i = 0; i < emailArray.length; i++) {
         emailList = `${emailList} ${emailArray[i].innerText}`
     }
+    emailList = gmailGuess(emailList)
     GM.setValue('emaiList', emailList)
     GM.setValue('emailTask', 'true')
 }
 
 if (location.href.includes('https://getcovey.com/covey/admin')) { setInterval(copyEmailsAdmin, 100) }
+
+// Add Gmail guesses  to non-Gmail domains
+function gmailGuess(emailList) {
+    const emailListArray = emailList.split(' ')
+    for (let i = 0; i < emailListArray.length; i++) {
+        if (emailListArray[i].includes('gmail')) { continue }
+       let gmailGuess = emailListArray[i].split('@').shift()
+        gmailGuess = `${gmailGuess}@gmail.com`
+        if (emailList.includes(gmailGuess)) { continue }
+        emailList = `${emailList} ${gmailGuess}`
+    }
+    return emailList
+}
