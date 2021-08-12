@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.6.1
+// @version      1.6.2
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
 // @match        https://lh3.googleusercontent.com/*
 // @match        https://acornapp.net/*
+// @match        http://localhost:8083/*
 // @match        https://getcovey.com/covey/admin*
+// @match        http://localhost:8080/covey/admin*
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -233,7 +235,7 @@ function upscaleAvatars() {
     }
 }
 
-if (location.hostname === 'acornapp.net') { setInterval(copyEmails, 100) }
+if (location.hostname === 'acornapp.net' || location.href.includes('localhost:8083')) { setInterval(copyEmails, 100) }
 
 // Copy email button for admin portal
 function copyEmailsAdmin() {
@@ -256,7 +258,7 @@ function openCalendarAdmin() {
     GM.setValue('emailTask', 'true')
 }
 
-if (location.href.includes('https://getcovey.com/covey/admin')) { setInterval(copyEmailsAdmin, 100) }
+if (location.href.includes('https://getcovey.com/covey/admin') || location.href.includes('localhost:8080')) { setInterval(copyEmailsAdmin, 100) }
 
 // Add Gmail guesses  to non-Gmail domains
 function gmailGuess(emailList) {
