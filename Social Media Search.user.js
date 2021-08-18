@@ -1,8 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
-// @update       https://github.com/1ComfyBlanket/Vendor-Userscripts/raw/main/Social%20Media%20Search.user.js
+// @version      1.4.3
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
@@ -65,13 +64,16 @@ addGlobalStyle(`
 
 function searchEmail() {
     const emailHandle = this.nextSibling.value.split("@", 1)[0]
-    // Some websites do not accept usernames with periods
+    // Some websites do not accept usernames with periods or incorrectly parse them
     let emailHandlePeriod = false
     if (emailHandle.includes('.')) { emailHandlePeriod = true }
+    if (emailHandlePeriod === false) {
+        window.open(`https://www.github.com/${emailHandle}`)
+        window.open(`https://dribbble.com/${emailHandle}`)
+    }
     window.open(`https://www.instagram.com/${emailHandle}`)
     window.open(`https://www.pinterest.com/${emailHandle}`)
     window.open(`https://www.twitter.com/${emailHandle}`)
-    if (emailHandlePeriod === false) { window.open(`https://www.github.com/${emailHandle}`) }
     window.open(`https://www.tiktok.com/@${emailHandle}`)
     window.open(`https://www.facebook.com/${emailHandle}`)
     window.open(`https://www.youtube.com/user/${emailHandle}`)
@@ -80,7 +82,6 @@ function searchEmail() {
     window.open(`https://www.poshmark.com/closet/${emailHandle}`)
     window.open(`https://www.tripadvisor.com/Profile/${emailHandle}`)
     window.open(`https://www.medium.com/@${emailHandle}/about`)
-    window.open(`https://dribbble.com/${emailHandle}`)
     window.open(`https://www.behance.net/${emailHandle}`)
 }
 
@@ -178,6 +179,7 @@ function missingProfile() {
         case 'www.facebook.com':
             missingProfileElement('hu5pjgll', `/404/404`)
             missingProfileElement('mvl img', `U4B06nLMGQt`)
+            missingProfileElement('hu5pjgll', `MnQWcWb6SrY`)
             break
         case 'www.youtube.com':
             missingProfileElement('', `404`)
@@ -221,7 +223,7 @@ let emailSectionArrayLength
 let emailFinderTab
 // Class names for elements
 const emailFinderTabClassName = 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-gray-800 text-gray-900 '
-const profileNameClassName = 'text-xl font-normal text-gray-900 truncate -mb-1'
+const profileNameClassName = 'text-xl font-normal text-gray-900 -mb-1'
 const emailSectionArrayClassName = 'text-sm text-gray-900 font-semibold'
 function emailSection() {
     if (document.getElementsByClassName(emailSectionArrayClassName).length) { return emailSectionArray[0].innerText.split('@')[0] }
@@ -318,4 +320,4 @@ function createSocialMediaButton() {
     emailHandle = emailSection()
 }
 
-if (location.hostname === 'acornapp.net') { setInterval(() => { emaiLtask() }, 100) }
+if (location.hostname.includes('acornapp.net')) { setInterval(() => { emaiLtask() }, 100) }
