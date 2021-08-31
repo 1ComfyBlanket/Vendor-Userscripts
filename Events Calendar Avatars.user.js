@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.6.2
+// @version      1.6.3
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -13,6 +13,7 @@
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        GM.setValue
 // @grant        GM.getValue
+// @grant        GM.deleteValue
 // @grant        GM.setClipboard
 // ==/UserScript==
 
@@ -127,6 +128,7 @@ function clearEmailList() {
 // Create a button with the profile's email that can be clicked to copy to cliboard
 async function copyEmailClipboard() {
     let email = await GM.getValue(window.location.href)
+    GM.deleteValue(window.location.href)
     email = email.split(' ')
     for (let i = 0; i < email.length; i++) {
         const copyEmail = document.createElement('a')
@@ -141,7 +143,11 @@ async function copyEmailClipboard() {
 async function autoEmailInput() {
     GM.setValue('emailTask', 'false')
     // Simulate a React change in order to change the value of an input field
-    const input = document.querySelector("#tabGuests > div.YxiWic.mCosT > div > span > div > div.d1dlne.WvJxMd > div.rFrNMe.Ax4B8.ULpymb.zKHdkd.Tyc9J > div.aCsJod.oJeWuf > div > div.Xb9hP > input")
+
+    // Returns both location and guest input field and selects the second in array which is the guest email field
+    const inputArray = document.getElementsByClassName("whsOnd zHQkBf")
+    const input = inputArray[1]
+
     const lastValue = input.value
     input.value = await GM.getValue('emaiList')
     const event = new Event('input', { bubbles: true })
@@ -265,7 +271,7 @@ function gmailGuess(emailList) {
     const emailListArray = emailList.split(' ')
     for (let i = 0; i < emailListArray.length; i++) {
         if (emailListArray[i].includes('gmail')) { continue }
-       let gmailGuess = emailListArray[i].split('@').shift()
+        let gmailGuess = emailListArray[i].split('@').shift()
         gmailGuess = `${gmailGuess}@gmail.com`
         if (emailList.includes(gmailGuess)) { continue }
         emailList = `${emailList} ${gmailGuess}`
