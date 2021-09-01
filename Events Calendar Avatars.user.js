@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.6.3
+// @version      1.6.4
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -144,11 +144,14 @@ async function autoEmailInput() {
     GM.setValue('emailTask', 'false')
     // Simulate a React change in order to change the value of an input field
 
-    // Returns both location and guest input field and selects the second in array which is the guest email field
-    const inputArray = document.getElementsByClassName("whsOnd zHQkBf")
-    const input = inputArray[1]
+    // Returns both location and guest input field and selects the field that is 320px wide as that is the email field
+    let input = document.getElementsByClassName("whsOnd zHQkBf")
+    for (let i = 0; i < input.length; i++) {
+        if (!input[i]) { continue }
+        if (input[i].offsetWidth === 320) { input = input[i] }
+    }
 
-    const lastValue = input.value
+             const lastValue = input.value
     input.value = await GM.getValue('emaiList')
     const event = new Event('input', { bubbles: true })
     event.simulated = true
