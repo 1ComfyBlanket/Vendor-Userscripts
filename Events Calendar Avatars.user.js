@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.6.4
+// @version      1.7.0
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -10,6 +10,7 @@
 // @match        http://localhost:8083/*
 // @match        https://getcovey.com/covey/admin*
 // @match        http://localhost:8080/covey/admin*
+// @match        https://contacts.google.com/*
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -17,16 +18,24 @@
 // @grant        GM.setClipboard
 // ==/UserScript==
 
+// Disable TrustedHTML for Google Contacts
+if (window.trustedTypes && window.trustedTypes.createPolicy) {
+    window.trustedTypes.createPolicy('default', {
+        createHTML: (string, sink) => string
+    });
+}
+
 // Inject CSS into the page
-function addGlobalStyle(css) {
+function addGlobalStyle(cssTrustedScript) {
     let head, style;
     head = document.getElementsByTagName('head')[0]
     if (!head) { return }
     style = document.createElement('style')
     style.type = 'text/css'
-    style.innerHTML = css
+    style.innerHTML = cssTrustedScript
     head.appendChild(style)
 }
+
 // Style the button
 addGlobalStyle(`
     .searchButton {
@@ -63,8 +72,11 @@ addGlobalStyle(`
     }
 `)
 
-// "kx3Hed" is the guest tab
+// "kx3Hed" is the guest tab in Gcal
 function guestTab() { return document.getElementsByClassName("kx3Hed") }
+
+// "Ax4B8 ZAGvjd" is the "Create contact" in Contacts
+function contactSearchBar() { return document.getElementsByClassName("U26fgb iZrPLc") }
 
 // Create and place buttons
 function createButton() {
@@ -84,6 +96,34 @@ function createButton() {
     openAvatar.parentNode.insertBefore(clearEmailsButtons, openAvatar.nextSibling.nextSibling)
     //Set className for CSS
     clearEmailsButtons.className = "searchButton"
+}
+
+//Create and place buttons for Contacts
+function contactCreateButton() {
+    // Prevent multiple buttons from being made
+    if (!contactSearchBar().length || contactSearchBar()[0].parentNode.children.length > 1) { return }
+    // "Open Images" button
+    const openAvatarsButton = document.createElement('a')
+    openAvatarsButton.addEventListener('click', contactOpenEmailAvatars, false)
+    openAvatarsButton.appendChild(document.createTextNode('Open Images'))
+    const openAvatar = contactSearchBar()[0]
+    openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling)
+    //Set className for CSS
+    openAvatarsButton.className = "searchButton"
+}
+function contactOpenEmailAvatars() {
+    const imageArray = document.getElementsByClassName('i0Sdn')
+    console.log(imageArray)
+    for (let i = 0; i < imageArray.length; i++) {
+        // Retrieve email
+        let email = imageArray[i].parentElement.nextSibling.children[0].innerText
+        // Retrieve avatar URL
+        let imageLink = imageArray[i].nextSibling.outerHTML.split('"')[5].split('s36')
+        imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+        if (imageLink.includes('no/photo')) { continue }
+        GM.setValue(imageLink, email)
+        window.open(imageLink)
+    }
 }
 
 // "jPtXgd" is all of the listed email avatars
@@ -125,7 +165,7 @@ function clearEmailList() {
     }
 }
 
-// Create a button with the profile's email that can be clicked to copy to cliboard
+// Create a button with the profile's email that can be clicked to copy to clipboard
 async function copyEmailClipboard() {
     let email = await GM.getValue(window.location.href)
     GM.deleteValue(window.location.href)
@@ -151,7 +191,7 @@ async function autoEmailInput() {
         if (input[i].offsetWidth === 320) { input = input[i] }
     }
 
-             const lastValue = input.value
+    const lastValue = input.value
     input.value = await GM.getValue('emaiList')
     const event = new Event('input', { bubbles: true })
     event.simulated = true
@@ -176,6 +216,17 @@ if (location.hostname === 'calendar.google.com') {
     }, 10)
     setInterval(checkEmails, 100)
     setInterval(upscaleAvatars, 200)
+}
+
+if (location.hostname.includes("contacts")) {
+    // Wait until Create contact exists
+    // const waitUntilSearchBarExists = setInterval(() => {
+    //     if (contactSearchBar().length) {
+    //         clearInterval(waitUntilSearchBarExists)
+    //         contactCreateButton()
+    //     }
+    // }, 10)
+    setInterval(contactCreateButton, 200)
 }
 
 if (location.hostname === 'lh3.googleusercontent.com') {
@@ -209,6 +260,7 @@ function copyEmails() {
 
 function openCalendar() {
     const emailList = gmailGuess(copyEmailsButton.children[2].value)
+    setTimeout(() => {GM.setClipboard(emailList)}, 500)
     GM.setValue('emaiList', emailList)
     GM.setValue('emailTask', 'true')
 }
@@ -263,6 +315,7 @@ function openCalendarAdmin() {
         emailList = `${emailList}${emailArray[i].innerText} `
     }
     emailList = gmailGuess(emailList)
+    setTimeout(() => {GM.setClipboard(emailList)}, 500)
     GM.setValue('emaiList', emailList)
     GM.setValue('emailTask', 'true')
 }
