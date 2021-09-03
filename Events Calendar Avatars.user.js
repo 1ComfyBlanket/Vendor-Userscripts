@@ -113,7 +113,6 @@ function contactCreateButton() {
 }
 function contactOpenEmailAvatars() {
     const imageArray = document.getElementsByClassName('i0Sdn')
-    console.log(imageArray)
     for (let i = 0; i < imageArray.length; i++) {
         // Retrieve email
         let email = imageArray[i].parentElement.nextSibling.children[0].innerText
