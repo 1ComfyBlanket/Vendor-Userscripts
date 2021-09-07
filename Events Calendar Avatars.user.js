@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.7.0
+// @version      1.7.1
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -300,14 +300,13 @@ if (location.hostname === 'acornapp.net' || location.href.includes('localhost:80
 // Copy email button for admin portal
 function copyEmailsAdmin() {
     // Add event handler to "Copy Emails" button
-    copyEmailsButton = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > a")
+    copyEmailsButton = document.getElementsByClassName('border-3 ml-3 pr-1 pl-2 py-2 focus:no-underline focus:text-gray-333 hover:text-gray-333 hover:shadow-lg hover:no-underline rounded-lg border-gray-333 font-semibold text-lg text-gray-333')[0]
     if (!copyEmailsButton) { return }
     copyEmailsButton.removeEventListener('click', openCalendarAdmin)
     copyEmailsButton.addEventListener('click', openCalendarAdmin, false)
 }
 
 function openCalendarAdmin() {
-    // const adminEmails = document.querySelector("#covey-admin-page > div:nth-child(2) > div > div.w-6\\/7.bg-white.rounded-lg.shadow-xl.transform.transition-all.z-20 > div.flex.justify-between.mt-3.pb-6.text-center.sm\\:mt-0.sm\\:text-left.px-6.pt-8 > h3 > div > div:nth-child(1) > div > input").value
     let emailList = ''
     const emailArray = document.getElementsByClassName('block text-center')
     for (let i = 0; i < emailArray.length; i++) {
