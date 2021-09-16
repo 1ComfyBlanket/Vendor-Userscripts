@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.7.1
+// @version      1.8.0
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -55,11 +55,25 @@ addGlobalStyle(`
         text-transform:capitalize;
     }
     .searchButton:hover {
-        background-color:#0061a7
+        background-color:#0061a7;
     }
     .searchButton:active {
         position:relative;
         top:1px;
+    }
+    .searchButton:google {
+        position:relative;
+        top:1px;
+    }
+    .reverseImageSearchButton {
+        box-shadow:inset 0px 1px 1px 0px #81b622;
+        background-color:#59981a;
+        border-radius:4px;
+        border:1px solid #3d550c;
+        padding:5px 8px;
+    }
+    .reverseImageSearchButton:hover {
+        background-color:#3d550c;
     }
     .exposedEmail {
         background-color:#ffadad;
@@ -167,7 +181,6 @@ function clearEmailList() {
 // Create a button with the profile's email that can be clicked to copy to clipboard
 async function copyEmailClipboard() {
     let email = await GM.getValue(window.location.href)
-    GM.deleteValue(window.location.href)
     email = email.split(' ')
     for (let i = 0; i < email.length; i++) {
         const copyEmail = document.createElement('a')
@@ -177,6 +190,18 @@ async function copyEmailClipboard() {
         emailPosition.parentNode.insertBefore(copyEmail, emailPosition)
         copyEmail.className = "searchButton"
     }
+}
+
+// Button for reverse image searching the avatar
+function reverseImageSearchButton() {
+    const imageSearch = document.createElement('a')
+    imageSearch.addEventListener('click', () => {
+        window.open(`https://www.google.com/searchbyimage?&image_url=${location}`)
+    }, false)
+    imageSearch.appendChild(document.createTextNode('Image Search'))
+    const emailPosition = document.getElementsByTagName("body")[0]
+    emailPosition.parentNode.insertBefore(imageSearch, emailPosition)
+    imageSearch.className = "searchButton reverseImageSearchButton"
 }
 
 async function autoEmailInput() {
@@ -242,6 +267,7 @@ if (location.hostname === 'lh3.googleusercontent.com') {
         if (document.getElementsByTagName('img').length) {
             clearInterval(waitUntilBody)
             copyEmailClipboard()
+            reverseImageSearchButton()
         }
     }, 10)
 }
