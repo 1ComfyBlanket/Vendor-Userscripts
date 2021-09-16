@@ -61,10 +61,6 @@ addGlobalStyle(`
         position:relative;
         top:1px;
     }
-    .searchButton:google {
-        position:relative;
-        top:1px;
-    }
     .reverseImageSearchButton {
         box-shadow:inset 0px 1px 1px 0px #81b622;
         background-color:#59981a;
