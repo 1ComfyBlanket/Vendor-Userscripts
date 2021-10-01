@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.8.1
+// @version      1.9.0
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -22,8 +22,12 @@
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
     window.trustedTypes.createPolicy('default', {
         createHTML: (string, sink) => string
-    });
+        // createScriptURL: (string, sink) => string
+        // createScript: (string, sink) => string
+    })
 }
+
+
 
 // Inject CSS into the page
 function addGlobalStyle(cssTrustedScript) {
@@ -108,7 +112,7 @@ function createButton() {
     clearEmailsButtons.className = "searchButton"
 }
 
-//Create and place buttons for Contacts
+// Create and place buttons for Contacts
 function contactCreateButton() {
     // Prevent multiple buttons from being made
     if (!contactSearchBar().length || contactSearchBar()[0].parentNode.children.length > 1) { return }
@@ -121,7 +125,9 @@ function contactCreateButton() {
     //Set className for CSS
     openAvatarsButton.className = "searchButton"
 }
+
 function contactOpenEmailAvatars() {
+    document.querySelector("#yDmH0d > c-wiz > div.QkOsze > div:nth-child(6) > div:nth-child(2) > div > div > div > div.E6Tb7b.psZcEd > div.v2jl3d > svg.NSy2Hd.cdByRd.RTiFqe.IRJKEb").click
     const imageArray = document.getElementsByClassName('i0Sdn')
     const uniqueImages = []
     for (let i = 0; i < imageArray.length; i++) {
@@ -136,6 +142,24 @@ function contactOpenEmailAvatars() {
         GM.setValue(imageLink, email)
         window.open(imageLink)
     }
+}
+
+// Clickable avatars in the Gcal hover card
+// The hover card is directly from Google Contacts thus in order to execute this it must be loaded from that URL
+function hoverCardAvatar() { return document.getElementsByClassName('oMU93c')[0] }
+function hoverCardAvatarButton() {
+    hoverCardAvatar().addEventListener('click', hoverCardOpenEmailAvatar, false)
+}
+
+function hoverCardOpenEmailAvatar() {
+    // Retrieve email
+    let email = hoverCardAvatar().parentElement.nextSibling.children[1].children[0].innerText
+    // Retrieve avatar URL
+    let imageLink = hoverCardAvatar().outerHTML.split('"')[5].split('s70')
+    imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+    if (imageLink.includes('default-user')) { return }
+    GM.setValue(imageLink, email)
+    window.open(imageLink)
 }
 
 // "jPtXgd" is all of the listed email avatars
@@ -242,14 +266,11 @@ if (location.hostname === 'calendar.google.com') {
 }
 
 if (location.hostname.includes("contacts")) {
-    // Wait until Create contact exists
-    // const waitUntilSearchBarExists = setInterval(() => {
-    //     if (contactSearchBar().length) {
-    //         clearInterval(waitUntilSearchBarExists)
-    //         contactCreateButton()
-    //     }
-    // }, 10)
     setInterval(contactCreateButton, 200)
+    setTimeout(() => {
+        document.querySelector("#yDmH0d > c-wiz > div.QkOsze > div:nth-child(6) > div:nth-child(2) > div > div > div > div.E6Tb7b.psZcEd > div.v2jl3d > svg.NSy2Hd.cdByRd.RTiFqe.IRJKEb").click
+    }, 3000)
+    setInterval(hoverCardAvatarButton, 200)
 }
 
 if (location.hostname === 'lh3.googleusercontent.com') {
