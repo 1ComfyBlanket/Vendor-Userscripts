@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.9.0
+// @version      1.9.1
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -155,8 +155,8 @@ function hoverCardOpenEmailAvatar() {
     // Retrieve email
     let email = hoverCardAvatar().parentElement.nextSibling.children[1].children[0].innerText
     // Retrieve avatar URL
-    let imageLink = hoverCardAvatar().outerHTML.split('"')[5].split('s70')
-    imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+    let imageLink = hoverCardAvatar().outerHTML.split('"')[5].split('=')
+    imageLink = `${imageLink[0]}=s1000-p-k-rw-no`
     if (imageLink.includes('default-user')) { return }
     GM.setValue(imageLink, email)
     window.open(imageLink)
