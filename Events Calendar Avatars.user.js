@@ -512,11 +512,7 @@ function gmailGuess(emailList) {
             continue
         }
         if (gmailGuess.includes('-')) {
-            const gmailGuessNames = gmailGuess.split('-')
-            gmailGuess = ''
-            for (let i = 0; i < gmailGuessNames.length; i++) {
-                gmailGuess = `${gmailGuess}${gmailGuessNames[i]}.`
-            }
+            gmailGuess =  gmailGuess.replaceAll('-', '.')
         }
         if (gmailGuess) gmailGuess = `${gmailGuess}@gmail.com`
         if (emailList.includes(gmailGuess)) {
