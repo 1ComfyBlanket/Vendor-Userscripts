@@ -223,7 +223,6 @@ function openEmailAvatars() {
             .split('"')[7]
             .split('&quot;')[1]
             .split(upscaleRes)
-        console.log(imageLink)
         imageLink = `${imageLink[0]}s1000${imageLink[1]}`
         if (imageLink.includes('default-user')) {
             continue
