@@ -19,6 +19,7 @@
 // ==/UserScript==
 
 const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
+const DEFAULT_USER_AVATAR = 'default-user'
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -188,7 +189,7 @@ function hoverCardOpenEmailAvatar() {
         .outerHTML.split('"')[5]
         .split('=')
     imageLink = `${imageLink[0]}=s1000-p-k-rw-no`
-    if (imageLink.includes('default-user')) {
+    if (imageLink.includes(DEFAULT_USER_AVATAR)) {
         return
     }
     GM.setValue(imageLink, email)
@@ -209,7 +210,7 @@ function openEmailAvatars() {
     // "jPtXgd" is all of the listed email avatars
     const imageArray = emailAvatars()
     for (let i = 1; i < imageArray.length; i++) {
-        //Skip delay
+        // First index is skipped since it's your own avatar
         // Retrieve email
         let email = imageArray[i].parentElement.previousSibling.outerHTML
             .split(`data-email="`)[1]
@@ -224,7 +225,7 @@ function openEmailAvatars() {
             .split('&quot;')[1]
             .split(upscaleRes)
         imageLink = `${imageLink[0]}s1000${imageLink[1]}`
-        if (imageLink.includes('default-user')) {
+        if (imageLink.includes(DEFAULT_USER_AVATAR)) {
             continue
         }
         if (
@@ -408,14 +409,16 @@ function spanEmailArray() {
 
 function upscaleAvatars() {
     const imageArray = emailAvatars()
+    const defaultRes = 's24'
     for (let i = 1; i < imageArray.length; i++) {
+        // First index is skipped since it's your own avatar
         if (
-            !imageArray[i].outerHTML.includes('s24') ||
-            imageArray[i].outerHTML.includes('default-user')
+            !imageArray[i].outerHTML.includes(defaultRes) ||
+            imageArray[i].outerHTML.includes(DEFAULT_USER_AVATAR)
         ) {
             continue
         }
-        const imageUpscale = imageArray[i].outerHTML.split('s24')
+        const imageUpscale = imageArray[i].outerHTML.split(defaultRes)
         imageArray[
             i
             ].outerHTML = `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
