@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.10.1
+// @version      1.10.2
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -309,21 +309,25 @@ async function autoEmailInput() {
 
     const lastValue = input.value
     input.value = await GM.getValue('emaiList')
-    const event = new Event('input', { bubbles: true })
-    event.simulated = true
-    const tracker = input._valueTracker
-    if (tracker) {
-        tracker.setValue(lastValue)
-    }
-    input.dispatchEvent(event)
 
-    // Simulate enter key to input emails
-    const enterKey = new KeyboardEvent('keydown', {
-        bubbles: true,
-        cancelable: true,
-        keyCode: 13,
-    })
-    input.dispatchEvent(enterKey)
+    // Gcal seems to accept inputs if its done while it's the active tab, more testing required
+    // setTimeout(() => {
+    //     const event = new Event('input', { bubbles: true })
+    //     event.simulated = true
+    //     const tracker = input._valueTracker
+    //     if (tracker) {
+    //         tracker.setValue(lastValue)
+    //     }
+    //     input.dispatchEvent(event)
+
+        // Simulate enter key to input emails
+        // const enterKey = new KeyboardEvent('keydown', {
+        //     bubbles: true,
+        //     cancelable: true,
+        //     keyCode: 13,
+        // })
+        // input.dispatchEvent(enterKey)
+    // }, 2000)
 }
 
 if (location.hostname === 'calendar.google.com') {
