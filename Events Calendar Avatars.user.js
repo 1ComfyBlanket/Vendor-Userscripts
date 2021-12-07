@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.10.2
+// @version      1.11
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -173,21 +173,42 @@ function contactOpenEmailAvatars() {
  *. The hover card is directly from Google Contacts thus in order to execute this it must be loaded from that URL
  ********/
 
+// Determine whether the script is running on the hover card or sidebar
+let hoverCardInstance = false
+if (window.location.href.includes('hovercard')) {
+    hoverCardInstance = true
+}
+
 function hoverCardAvatar() {
-    return document.getElementsByClassName('oMU93c')[0]
+    let avatar
+    if (hoverCardInstance) {
+        avatar = document.getElementsByClassName('oMU93c')[0]
+    } else {
+        avatar = document.getElementsByClassName('nj9uHf')[0]
+    }
+    return avatar
 }
 function hoverCardAvatarButton() {
-    hoverCardAvatar().addEventListener('click', hoverCardOpenEmailAvatar, false)
+    const avatar = hoverCardAvatar()
+    avatar.addEventListener('click', hoverCardOpenEmailAvatar, false)
 }
 
 function hoverCardOpenEmailAvatar() {
     // Retrieve email
-    let email = hoverCardAvatar().parentElement.nextSibling.children[1]
-        .children[0].innerText
+    let email
+    if (hoverCardInstance) {
+        email = this.parentElement.nextSibling.children[1]
+            .children[0].innerText
+    } else {
+        email = this.parentElement.parentElement.nextSibling.children[0].innerText
+    }
     // Retrieve avatar URL
-    let imageLink = hoverCardAvatar()
-        .outerHTML.split('"')[5]
-        .split('=')
+    let imagelink
+    if (hoverCardInstance) {
+        imageLink = this.outerHTML.split('"')[5].split('=')
+    } else {
+        imageLink = this.outerHTML.split('"')[3].split('=')
+    }
     imageLink = `${imageLink[0]}=s1000-p-k-rw-no`
     if (imageLink.includes(DEFAULT_USER_AVATAR)) {
         return
