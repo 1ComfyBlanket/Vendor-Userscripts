@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.11
+// @version      1.12
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -103,11 +103,10 @@ function contactSearchBar() {
 function createButtons() {
     // "Open Images" button
     const openAvatarsButton = document.createElement('a')
-    openAvatarsButton.addEventListener('click', openEmailAvatars, false)
+    openAvatarsButton.addEventListener('click', openImages, false)
     openAvatarsButton.appendChild(document.createTextNode('Open Images'))
     const openAvatar = guestTab()[0]
     openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling)
-    //Set className for CSS
     openAvatarsButton.className = SEARCH_BUTTON_CSS_CLASS
 
     // "Clear All" button
@@ -118,8 +117,17 @@ function createButtons() {
         clearEmailsButtons,
         openAvatar.nextSibling.nextSibling
     )
-    //Set className for CSS
     clearEmailsButtons.className = SEARCH_BUTTON_CSS_CLASS
+
+    // "Copy All" button (disabled until new Gcal task is implemented)
+    // const CopyEmailsButton = document.createElement('a')
+    // CopyEmailsButton.addEventListener('click', CopyEmailList, false)
+    // CopyEmailsButton.appendChild(document.createTextNode('Copy All'))
+    // openAvatar.parentNode.insertBefore(
+    //     CopyEmailsButton,
+    //     openAvatar.nextSibling.nextSibling
+    // )
+    // CopyEmailsButton.className = SEARCH_BUTTON_CSS_CLASS
 }
 
 // Create and place buttons for Contacts
@@ -221,47 +229,93 @@ function hoverCardOpenEmailAvatar() {
  *. End of implementation for clickable avatars in Gcal hover card
  ********/
 
+/****
+ *. Persist Gcal and Google Contacts sidebar emails in storage
+ ********/
+
+function storeSidebarContactsEmails() {
+    const emailRows = document.getElementsByClassName('hRP3bd')
+    let emailList = []
+    let emailListFiltered = []
+    for (let i = 0; i < emailRows.length; i++) {
+        const emails = emailRows[i].parentElement.nextSibling.children
+        let imageUrl = emailRows[i].outerHTML.split('"')[1].split('=')[0]
+        imageUrl = `${imageUrl}=s1000-p-k-rw-no`
+        const defaultAvatar = imageUrl.length <= 97
+        for (let i = 0; i < emails.length; i++) {
+            const email = emails[i].innerText
+            emailList.push({ email: email, avatar: imageUrl })
+            if (!defaultAvatar && email.includes('@') && !imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes('/a/') && !imageUrl.includes('gstatic.com')) {
+                emailListFiltered.push({ email: email, avatar: imageUrl })
+            }
+            if (i === 0 || emails[0].innerText === emails[1].innerText || !emails[0].innerText.includes('@')) { continue }
+            emails[i].className = 'exposedEmail'
+        }
+    }
+    const emailListString = JSON.stringify(emailList)
+    const emailListFilteredString = JSON.stringify(emailListFiltered)
+    GM.setValue('contactEmailList', emailListString)
+    GM.setValue('contactEmailListFiltered', emailListFilteredString)
+}
+
+function storeGcalEmails() {
+    const emailRows = emailAvatars()
+    let emailList = []
+    for (let i = 0; i < emailRows.length; i++) {
+        const email = emailRows[i].parentElement.parentElement.parentElement.innerText.split('\n')[0]
+        let imageUrl = emailRows[i].outerHTML
+            .split('"')[7]
+            .split('&quot;')[1]
+            .split('=')[0]
+        imageUrl = `${imageUrl}=s1000-p-k-rw-no`
+        if (!imageUrl.includes(DEFAULT_USER_AVATAR)) {
+            emailList.push({ email: email, avatar: imageUrl })
+        }
+    }
+    const emailListString = JSON.stringify(emailList)
+    GM.setValue('gcalEmailList', emailListString)
+}
+
+/****
+ *. End of implementation for persisting Gcal and Google Contacts sidebar emails in storage
+ ********/
+
 // "jPtXgd" is all of the listed email avatars
 function emailAvatars() {
     return document.getElementsByClassName('jPtXgd')
 }
 
-// Grabs all of the avatars currently in the email list and scale the image from 24px to 1000px
-function openEmailAvatars() {
-    // "jPtXgd" is all of the listed email avatars
-    const imageArray = emailAvatars()
-    for (let i = 1; i < imageArray.length; i++) {
-        // First index is skipped since it's your own avatar
-        // Retrieve email
-        let email = imageArray[i].parentElement.previousSibling.outerHTML
-            .split(`data-email="`)[1]
-            .split(`" role=`)[0]
-        // Retrieve email for hovercard mismatch comparison
-        const spanEmail =
-            imageArray[i].parentElement.parentElement.nextSibling.children[0]
-                .children[0].children[0].children[0].innerText
-        // Retrieve avatar URL
-        let imageLink = imageArray[i].outerHTML
-            .split('"')[7]
-            .split('&quot;')[1]
-            .split(upscaleRes)
-        imageLink = `${imageLink[0]}s1000${imageLink[1]}`
-        if (imageLink.includes(DEFAULT_USER_AVATAR)) {
-            continue
+async function openImages() {
+    const userEmail = document.getElementsByClassName('gb_C gb_Ma gb_h')[0].outerHTML
+    const emailListString = await GM.getValue('gcalEmailList')
+    const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
+    const emailList = JSON.parse(emailListString)
+    const emailListFiltered = JSON.parse(emailListFilteredString)
+    const emails = new Set(emailList.map(e => e.email));
+    const mergedEmailList = [...emailList, ...emailListFiltered.filter(e => !emails.has(e.email))]
+    // Skip the first index as it's your own email
+    for (let i = 1; i < mergedEmailList.length; i++) {
+        const newEmail = mergedEmailList[i].email
+        if (userEmail.includes(newEmail)) { continue }
+        const imgUrl = mergedEmailList[i].avatar
+        const oldEmails = await GM.getValue(imgUrl)
+        if (oldEmails.includes(newEmail)) {
+            GM.setValue(imgUrl, oldEmails)
+        } else {
+            const emails = `${oldEmails} ${newEmail}`
+            GM.setValue(imgUrl, emails)
         }
-        if (
-            !email.replace(/\./g, '').includes(spanEmail.replace(/\./g, '')) &&
-            spanEmail.includes('@')
-        ) {
-            email = `${email} ${spanEmail}`
-        }
-        GM.setValue(imageLink, email)
-        window.open(imageLink)
+        window.open(imgUrl)
     }
-    if (autoEmailProcess) {
-        autoEmailProcess = false
-        clearEmailList()
-    }
+}
+
+async function CopyEmailList () {
+    const emailListString = await GM.getValue('contactEmailList')
+    const emailList = JSON.parse(emailListString)
+    const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
+    const emailListFiltered = JSON.parse(emailListFilteredString)
+    console.log(emailList)
+    console.log(emailListFiltered)
 }
 
 function clearEmailList() {
@@ -273,7 +327,7 @@ function clearEmailList() {
     for (let i = 0; i < a; i++) {
         // Every second entry in the array is the remove button. Removing deletes from the array so cycling
         // the second index for the length of the array will remove all emails listed
-        closeButtonArray[1].click()
+        closeButtonArray[2].click()
     }
 }
 
@@ -361,6 +415,7 @@ if (location.hostname === 'calendar.google.com') {
     }, 10)
     setInterval(checkEmails, 100)
     setInterval(upscaleAvatars, 200)
+    setInterval(storeGcalEmails, 200)
 }
 
 if (location.hostname.includes('contacts')) {
@@ -371,6 +426,9 @@ if (location.hostname.includes('contacts')) {
         ).click
     }, 3000)
     setInterval(hoverCardAvatarButton, 200)
+    if (!hoverCardInstance) {
+        setInterval(storeSidebarContactsEmails, 200)
+    }
 }
 
 if (location.hostname === 'lh3.googleusercontent.com') {
