@@ -298,11 +298,11 @@ async function openImages() {
         const newEmail = mergedEmailList[i].email
         if (userEmail.includes(newEmail)) { continue }
         const imgUrl = mergedEmailList[i].avatar
-        const oldEmails = await GM.getValue(imgUrl)
+        const oldEmails = await GM.getValue(imgUrl) ?? ''
         if (oldEmails.includes(newEmail)) {
             GM.setValue(imgUrl, oldEmails)
         } else {
-            const emails = `${oldEmails} ${newEmail}`
+            const emails = `${oldEmails} ${newEmail}`.trim()
             GM.setValue(imgUrl, emails)
         }
         window.open(imgUrl)
