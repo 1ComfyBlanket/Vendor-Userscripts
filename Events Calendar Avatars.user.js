@@ -122,7 +122,7 @@ function createButtons() {
 
     // "Copy All" button (disabled until new Gcal task is implemented)
     // const CopyEmailsButton = document.createElement('a')
-    // CopyEmailsButton.addEventListener('click', CopyEmailList, false)
+    // CopyEmailsButton.addEventListener('click', copyEmailList, false)
     // CopyEmailsButton.appendChild(document.createTextNode('Copy All'))
     // openAvatar.parentNode.insertBefore(
     //     CopyEmailsButton,
@@ -199,6 +199,7 @@ function hoverCardAvatar() {
 }
 function hoverCardAvatarButton() {
     const avatar = hoverCardAvatar()
+    avatar.removeEventListener('click', hoverCardOpenEmailAvatar)
     avatar.addEventListener('click', hoverCardOpenEmailAvatar, false)
 }
 
@@ -211,12 +212,13 @@ function hoverCardOpenEmailAvatar() {
         email = this.parentElement.parentElement.nextSibling.children[0].innerText
     }
     // Retrieve avatar URL
-    let imagelink
+    let imageLinkIdx
     if (hoverCardInstance) {
-        imageLink = this.outerHTML.split('"')[5].split('=')
+        imageLinkIdx = 5
     } else {
-        imageLink = this.outerHTML.split('"')[3].split('=')
+        imageLinkIdx = 3
     }
+    let imageLink = this.outerHTML.split('"')[imageLinkIdx].split('=')
     imageLink = `${imageLink[0]}=s1000-p-k-rw-no`
     if (imageLink.includes(DEFAULT_USER_AVATAR)) {
         return
@@ -329,13 +331,11 @@ async function openImages() {
     }
 }
 
-async function CopyEmailList() {
+async function copyEmailList() {
     const emailListString = await GM.getValue('contactEmailList')
     const emailList = JSON.parse(emailListString)
     const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
     const emailListFiltered = JSON.parse(emailListFilteredString)
-    // console.log(emailList)
-    // console.log(emailListFiltered)
 }
 
 function clearEmailList() {
@@ -345,8 +345,8 @@ function clearEmailList() {
     )
     let a = closeButtonArray.length
     for (let i = 0; i < a; i++) {
-        // Every second entry in the array is the remove button. Removing deletes from the array so cycling
-        // the second index for the length of the array will remove all emails listed
+        // Every third entry in the array is the remove button. Removing deletes from the array so cycling
+        // the third index for the length of the array will remove all emails listed
         closeButtonArray[2].click()
     }
 }
