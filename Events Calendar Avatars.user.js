@@ -205,8 +205,7 @@ function hoverCardOpenEmailAvatar() {
     // Retrieve email
     let email
     if (hoverCardInstance) {
-        email = this.parentElement.nextSibling.children[1]
-            .children[0].innerText
+        email = this.parentElement.nextSibling.children[1].children[0].innerText
     } else {
         email = this.parentElement.parentElement.nextSibling.children[0].innerText
     }
@@ -239,16 +238,28 @@ function storeSidebarContactsEmails() {
     let emailListFiltered = []
     for (let i = 0; i < emailRows.length; i++) {
         const emails = emailRows[i].parentElement.nextSibling.children
-        let imageUrl = emailRows[i].outerHTML.split('"')[1].split('=')[0]
+        let imageUrl = emailRows[i].src.split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
         const defaultAvatar = imageUrl.length <= 97
         for (let i = 0; i < emails.length; i++) {
             const email = emails[i].innerText
             emailList.push({ email: email, avatar: imageUrl })
-            if (!defaultAvatar && email.includes('@') && !imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes('/a/') && !imageUrl.includes('gstatic.com')) {
+            if (
+                !defaultAvatar &&
+                email.includes('@') &&
+                !imageUrl.includes(DEFAULT_USER_AVATAR) &&
+                !imageUrl.includes('/a/') &&
+                !imageUrl.includes('gstatic.com')
+            ) {
                 emailListFiltered.push({ email: email, avatar: imageUrl })
             }
-            if (i === 0 || emails[0].innerText === emails[1].innerText || !emails[0].innerText.includes('@')) { continue }
+            if (
+                i === 0 ||
+                emails[0].innerText === emails[1].innerText ||
+                !emails[0].innerText.includes('@')
+            ) {
+                continue
+            }
             emails[i].className = 'exposedEmail'
         }
     }
@@ -262,10 +273,11 @@ function storeGcalEmails() {
     const emailRows = emailAvatars()
     let emailList = []
     for (let i = 0; i < emailRows.length; i++) {
-        const email = emailRows[i].parentElement.parentElement.parentElement.innerText.split('\n')[0]
-        let imageUrl = emailRows[i].outerHTML
-            .split('"')[7]
-            .split('&quot;')[1]
+        const email = emailRows[
+            i
+            ].parentElement.parentElement.parentElement.getAttribute('data-hovercard-id')
+        let imageUrl = emailRows[i].getAttribute('style')
+            .split('"')[1]
             .split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
         if (!imageUrl.includes(DEFAULT_USER_AVATAR)) {
@@ -286,36 +298,43 @@ function emailAvatars() {
 }
 
 async function openImages() {
-    const userEmail = document.getElementsByClassName('gb_C gb_Ma gb_h')[0].outerHTML
+    const userEmail = document.getElementsByClassName('gb_C gb_Ma gb_h')[0]
+        .outerHTML
     const emailListString = await GM.getValue('gcalEmailList')
     const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
     const emailList = JSON.parse(emailListString)
     const emailListFiltered = JSON.parse(emailListFilteredString)
-    const emails = new Set(emailList.map(e => e.email));
-    const mergedEmailList = [...emailList, ...emailListFiltered.filter(e => !emails.has(e.email))]
+    const emails = new Set(emailList.map(e => e.email))
+    const mergedEmailList = [
+        ...emailList,
+        ...emailListFiltered.filter(e => !emails.has(e.email)),
+    ]
     // Skip the first index as it's your own email
     for (let i = 1; i < mergedEmailList.length; i++) {
         const newEmail = mergedEmailList[i].email
-        if (userEmail.includes(newEmail)) { continue }
+        if (userEmail.includes(newEmail)) {
+            continue
+        }
         const imgUrl = mergedEmailList[i].avatar
-        const oldEmails = await GM.getValue(imgUrl) ?? ''
-        if (oldEmails.includes(newEmail)) {
-            GM.setValue(imgUrl, oldEmails)
+        const oldEmails = (await GM.getValue(imgUrl))?.split(' ') ?? []
+        const oldEmailsFiltered = oldEmails.filter(e => e.includes('@')).join(' ')
+        if (oldEmailsFiltered.includes(newEmail)) {
+            GM.setValue(imgUrl, oldEmailsFiltered)
         } else {
-            const emails = `${oldEmails} ${newEmail}`.trim()
+            const emails = `${oldEmailsFiltered} ${newEmail}`.trim()
             GM.setValue(imgUrl, emails)
         }
         window.open(imgUrl)
     }
 }
 
-async function CopyEmailList () {
+async function CopyEmailList() {
     const emailListString = await GM.getValue('contactEmailList')
     const emailList = JSON.parse(emailListString)
     const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
     const emailListFiltered = JSON.parse(emailListFilteredString)
-    console.log(emailList)
-    console.log(emailListFiltered)
+    // console.log(emailList)
+    // console.log(emailListFiltered)
 }
 
 function clearEmailList() {
@@ -395,13 +414,13 @@ async function autoEmailInput() {
     //     }
     //     input.dispatchEvent(event)
 
-        // Simulate enter key to input emails
-        // const enterKey = new KeyboardEvent('keydown', {
-        //     bubbles: true,
-        //     cancelable: true,
-        //     keyCode: 13,
-        // })
-        // input.dispatchEvent(enterKey)
+    // Simulate enter key to input emails
+    // const enterKey = new KeyboardEvent('keydown', {
+    //     bubbles: true,
+    //     cancelable: true,
+    //     keyCode: 13,
+    // })
+    // input.dispatchEvent(enterKey)
     // }, 2000)
 }
 
@@ -599,7 +618,7 @@ function gmailGuess(emailList) {
         if (gmailGuessFilter.includes(gmailGuess)) {
             continue
         }
-        gmailGuess =  gmailGuess.replaceAll('-', '.').replaceAll('_', '.')
+        gmailGuess = gmailGuess.replaceAll('-', '.').replaceAll('_', '.')
         if (gmailGuess) gmailGuess = `${gmailGuess}@gmail.com`
         if (emailList.includes(gmailGuess)) {
             continue
