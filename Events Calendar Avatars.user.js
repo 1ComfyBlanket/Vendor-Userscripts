@@ -241,10 +241,12 @@ function storeSidebarContactsEmails() {
         const emails = emailRows[i].parentElement.nextSibling.children
         let imageUrl = emailRows[i].src.split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
+        const defaultAvatar = imageUrl.length <= DEFAULT_AVATAR_IMG_LEN
         for (let i = 0; i < emails.length; i++) {
             const email = emails[i].innerText
             emailList.push({ email: email, avatar: imageUrl })
             if (
+                !defaultAvatar &&
                 email.includes('@') &&
                 !imageUrl.includes(DEFAULT_USER_AVATAR) &&
                 !imageUrl.includes('/a/') &&
