@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.12
+// @version      1.13
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -21,6 +21,7 @@
 const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
 const DEFAULT_USER_AVATAR = 'default-user'
 const DEFAULT_AVATAR_IMG_LEN = 97
+const DEFAULT_INITIAL_AVATAR = '/a/'
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -251,7 +252,7 @@ function storeSidebarContactsEmails() {
                 !defaultAvatar &&
                 email.includes('@') &&
                 !imageUrl.includes(DEFAULT_USER_AVATAR) &&
-                !imageUrl.includes('/a/') &&
+                !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
                 !imageUrl.includes('gstatic.com')
             ) {
                 emailListFiltered.push({ email: email, avatar: imageUrl })
@@ -283,7 +284,7 @@ function storeGcalEmails() {
             .split('"')[1]
             .split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
-        if (!imageUrl.includes(DEFAULT_USER_AVATAR)) {
+        if (!imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes(DEFAULT_INITIAL_AVATAR)) {
             emailList.push({ email: email, avatar: imageUrl })
         }
     }
@@ -312,8 +313,7 @@ async function openImages() {
         ...emailList,
         ...emailListFiltered.filter(e => !emails.has(e.email)),
     ]
-    // Skip the first index as it's your own email
-    for (let i = 1; i < mergedEmailList.length; i++) {
+    for (let i = 0; i < mergedEmailList.length; i++) {
         const newEmail = mergedEmailList[i].email
         if (userEmail.includes(newEmail)) {
             continue
