@@ -20,6 +20,7 @@
 
 const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
 const DEFAULT_USER_AVATAR = 'default-user'
+const DEFAULT_AVATAR_IMG_LEN = 97
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -240,12 +241,10 @@ function storeSidebarContactsEmails() {
         const emails = emailRows[i].parentElement.nextSibling.children
         let imageUrl = emailRows[i].src.split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
-        const defaultAvatar = imageUrl.length <= 97
         for (let i = 0; i < emails.length; i++) {
             const email = emails[i].innerText
             emailList.push({ email: email, avatar: imageUrl })
             if (
-                !defaultAvatar &&
                 email.includes('@') &&
                 !imageUrl.includes(DEFAULT_USER_AVATAR) &&
                 !imageUrl.includes('/a/') &&
