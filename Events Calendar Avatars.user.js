@@ -108,7 +108,9 @@ function emailAvatars() {
 
 // "gb_C gb_Ma gb_h" is the user account tab that contains the logged in user's name and email
 function userEmail() {
-    return document.getElementsByClassName('gb_C gb_Ma gb_h')[0]?.getAttribute('aria-label')
+    return document
+        .getElementsByClassName('gb_C gb_Ma gb_h')[0]
+        ?.getAttribute('aria-label')
 }
 
 // "kMp0We Wm6kRe YaPvld USzdTb X4Mf1d" is the Gcal email list starting from the email row element
@@ -126,24 +128,24 @@ function createButtons() {
     openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar)
     openAvatarsButton.className = SEARCH_BUTTON_CSS_CLASS
 
-    // "Copy Contacts" button (disabled until new Gcal task is implemented)
+    // "Copy Contacts" button
     const CopyEmailsButton = document.createElement('a')
-    CopyEmailsButton.addEventListener('click', () => { GM.setValue('gcalToAcornCopyEmails', true) }, false)
-    CopyEmailsButton.appendChild(document.createTextNode('Copy Contacts'))
-    openAvatar.parentNode.insertBefore(
-        CopyEmailsButton,
-        openAvatar
+    CopyEmailsButton.addEventListener(
+        'click',
+        () => {
+            GM.setValue('gcalToAcornCopyEmails', true)
+        },
+        false
     )
+    CopyEmailsButton.appendChild(document.createTextNode('Copy Contacts'))
+    openAvatar.parentNode.insertBefore(CopyEmailsButton, openAvatar)
     CopyEmailsButton.className = SEARCH_BUTTON_CSS_CLASS
 
     // "Clear All" button
     const clearEmailsButtons = document.createElement('a')
     clearEmailsButtons.addEventListener('click', clearEmailList, false)
     clearEmailsButtons.appendChild(document.createTextNode('Clear All'))
-    openAvatar.parentNode.insertBefore(
-        clearEmailsButtons,
-        openAvatar
-    )
+    openAvatar.parentNode.insertBefore(clearEmailsButtons, openAvatar)
     clearEmailsButtons.className = SEARCH_BUTTON_CSS_CLASS
 }
 
@@ -269,8 +271,8 @@ async function storeSidebarContactsEmails() {
                 email.includes('@') &&
                 !imageUrl.includes(DEFAULT_USER_AVATAR) &&
                 !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
-                !imageUrl.includes('gstatic.com')
-                && !user.includes(email)
+                !imageUrl.includes('gstatic.com') &&
+                !user.includes(email)
             ) {
                 emailListFiltered.push({ email: email, avatar: imageUrl })
             }
@@ -299,17 +301,24 @@ async function storeSidebarContactsEmails() {
 async function storeGcalEmails() {
     const emailRows = emailAvatars()
     const user = await GM.getValue('userEmail', '')
-        let emailList = []
+    let emailList = []
     for (let i = 0; i < emailRows.length; i++) {
         const email = emailRows[
             i
-            ].parentElement.parentElement.parentElement.getAttribute('data-hovercard-id')
-        let imageUrl = emailRows[i].getAttribute('style')
+            ].parentElement.parentElement.parentElement.getAttribute(
+            'data-hovercard-id'
+        )
+        let imageUrl = emailRows[i]
+            .getAttribute('style')
             .split('"')[1]
             .split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
-        if (!imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes(DEFAULT_INITIAL_AVATAR) && !user.includes(email)) {
-            emailList.push({ email: email, avatar: imageUrl})
+        if (
+            !imageUrl.includes(DEFAULT_USER_AVATAR) &&
+            !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
+            !user.includes(email)
+        ) {
+            emailList.push({ email: email, avatar: imageUrl })
         }
     }
     const emailListString = JSON.stringify(emailList)
@@ -333,25 +342,31 @@ async function removeEmailsWithoutAvatarFromList() {
     const contactEmailList = JSON.parse(contactEmailListString)
     const contactEmailListUpdated = await GM.getValue('contactEmailListUpdated')
     const gcalEmailListUpdated = await GM.getValue('gcalEmailListUpdated')
-    if (!contactEmailListUpdated && !gcalEmailListUpdated || contactEmailList.length === 0) { return }
+    if (
+        (!contactEmailListUpdated && !gcalEmailListUpdated) ||
+        contactEmailList.length === 0
+    ) {
+        return
+    }
     GM.setValue('contactEmailListUpdated', false)
     GM.setValue('gcalEmailListUpdated', false)
 
     // Must be delayed to allow possible avatars to load and exist
-    const emails = emailRows()
-    const emailsWithNoAvatar = []
-    for (let i = 0; i < emails.length; i++) {
-        const emailRow = emails[i]
-        const email = emailRow.getAttribute('data-hovercard-id')
-        const emailInGcalList = gcalEmailList.some(e => e.email === email)
-        const emailInContactList = contactEmailList.some(e => e.email === email)
-        if (!emailInGcalList && !emailInContactList) {
-            const removeButton = emailRow.children[2].children[0].children[2]
-            emailsWithNoAvatar.unshift(removeButton)
+    setTimeout(() => {
+        const emails = emailRows()
+        const emailsWithNoAvatar = []
+        for (let i = 0; i < emails.length; i++) {
+            const emailRow = emails[i]
+            const email = emailRow.getAttribute('data-hovercard-id')
+            const emailInGcalList = gcalEmailList.some(e => e.email === email)
+            const emailInContactList = contactEmailList.some(e => e.email === email)
+            if (!emailInGcalList && !emailInContactList) {
+                const removeButton = emailRow.children[2].children[0].children[2]
+                emailsWithNoAvatar.unshift(removeButton)
+            }
         }
-    }
-    emailsWithNoAvatar.forEach(e => e.click())
-
+        emailsWithNoAvatar.forEach(e => e.click())
+    }, 500)
 }
 
 async function openImages() {
@@ -516,9 +531,10 @@ let copyEmailsButton
 let autoEmailProcess
 function copyEmails() {
     // Add event handler to "Copy Emails" button
-    copyEmailsButton = document.querySelector(
-        '#react-root > div > div > div > div.flex.flex-col.min-w-0.flex-1.overflow-hidden > div > main > article > div.mx-auto.pb-24 > div > div.fixed.bg-white.py-4.px-8.z-10.border-b.border-b-eee > div > div.ml-6.mt-0\\.5 > div'
-    ) ?? document.getElementById('copy-emails-button')
+    copyEmailsButton =
+        document.querySelector(
+            '#react-root > div > div > div > div.flex.flex-col.min-w-0.flex-1.overflow-hidden > div > main > article > div.mx-auto.pb-24 > div > div.fixed.bg-white.py-4.px-8.z-10.border-b.border-b-eee > div > div.ml-6.mt-0\\.5 > div'
+        ) ?? document.getElementById('copy-emails-button')
     if (!copyEmailsButton) {
         return
     }
