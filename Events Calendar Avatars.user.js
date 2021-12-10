@@ -567,25 +567,21 @@ function spanEmailArray() {
 }
 
 function upscaleAvatars() {
-    const imageArray = emailAvatars()
+    const avatars = emailAvatars()
     const defaultRes = 's24'
-    for (let i = 0; i < imageArray.length; i++) {
+    for (let avatar of avatars) {
         if (
-            !imageArray[i].outerHTML.includes(defaultRes) ||
-            imageArray[i].outerHTML.includes(DEFAULT_USER_AVATAR)
+            !avatar.outerHTML.includes(defaultRes) ||
+            avatar.outerHTML.includes(DEFAULT_USER_AVATAR)
         ) {
             continue
         }
-        const imageUpscale = imageArray[i].outerHTML.split(defaultRes)
-        imageArray[
-            i
-            ].outerHTML = `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
-        const imageParentUpscale = imageArray[i].parentElement.outerHTML.split(
+        const imageUpscale = avatar.getAttribute('style').split(defaultRes)
+        avatar.setAttribute('style', `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`)
+        const imageParentUpscale = avatar.parentElement.getAttribute('style').split(
             '24px;'
         )
-        imageArray[
-            i
-            ].parentElement.outerHTML = `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;${imageParentUpscale[2]}`
+        avatar.parentElement.setAttribute('style', `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;`)
     }
 }
 
