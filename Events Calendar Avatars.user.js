@@ -101,6 +101,21 @@ function contactSearchBar() {
     return document.getElementsByClassName('U26fgb iZrPLc')
 }
 
+// "jPtXgd" is all of the listed email avatars
+function emailAvatars() {
+    return document.getElementsByClassName('jPtXgd')
+}
+
+// "gb_C gb_Ma gb_h" is the user account tab that contains the logged in user's name and email
+function userEmail() {
+    return document.getElementsByClassName('gb_C gb_Ma gb_h')[0]?.getAttribute('aria-label')
+}
+
+// "kMp0We Wm6kRe YaPvld USzdTb X4Mf1d" is the Gcal email list starting from the email row element
+function emailRows() {
+    return document.getElementsByClassName('kMp0We Wm6kRe YaPvld USzdTb X4Mf1d')
+}
+
 // Create and place buttons
 function createButtons() {
     // "Open Images" button
@@ -238,6 +253,7 @@ function hoverCardOpenEmailAvatar() {
 
 async function storeSidebarContactsEmails() {
     const emailRows = document.getElementsByClassName('hRP3bd')
+    const user = await GM.getValue('userEmail', '')
     let emailList = []
     let emailListFiltered = []
     for (let i = 0; i < emailRows.length; i++) {
@@ -254,6 +270,7 @@ async function storeSidebarContactsEmails() {
                 !imageUrl.includes(DEFAULT_USER_AVATAR) &&
                 !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
                 !imageUrl.includes('gstatic.com')
+                && !user.includes(email)
             ) {
                 emailListFiltered.push({ email: email, avatar: imageUrl })
             }
@@ -281,7 +298,8 @@ async function storeSidebarContactsEmails() {
 
 async function storeGcalEmails() {
     const emailRows = emailAvatars()
-    let emailList = []
+    const user = await GM.getValue('userEmail', '')
+        let emailList = []
     for (let i = 0; i < emailRows.length; i++) {
         const email = emailRows[
             i
@@ -290,7 +308,7 @@ async function storeGcalEmails() {
             .split('"')[1]
             .split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
-        if (!imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes(DEFAULT_INITIAL_AVATAR)) {
+        if (!imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes(DEFAULT_INITIAL_AVATAR) && !user.includes(email)) {
             emailList.push({ email: email, avatar: imageUrl})
         }
     }
@@ -309,43 +327,34 @@ async function storeGcalEmails() {
  ********/
 
 async function removeEmailsWithoutAvatarFromList() {
-    const contactEmailListUpdated = await GM.getValue('contactEmailListUpdated')
-    const gcalEmailListUpdated = await GM.getValue('gcalEmailListUpdated')
-    if (!contactEmailListUpdated && !gcalEmailListUpdated) { return }
-    GM.setValue('contactEmailListUpdated', false)
-    GM.setValue('gcalEmailListUpdated', false)
-
     const gcalEmailListString = await GM.getValue('gcalEmailList')
     const contactEmailListString = await GM.getValue('contactEmailListFiltered')
     const gcalEmailList = JSON.parse(gcalEmailListString)
     const contactEmailList = JSON.parse(contactEmailListString)
-    if (gcalEmailList.length === 0 && contactEmailList.length === 0) { return }
+    const contactEmailListUpdated = await GM.getValue('contactEmailListUpdated')
+    const gcalEmailListUpdated = await GM.getValue('gcalEmailListUpdated')
+    if (!contactEmailListUpdated && !gcalEmailListUpdated || contactEmailList.length === 0) { return }
+    GM.setValue('contactEmailListUpdated', false)
+    GM.setValue('gcalEmailListUpdated', false)
 
     // Must be delayed to allow possible avatars to load and exist
-    setTimeout(() => {
-        const emailRows = document.getElementsByClassName('kMp0We Wm6kRe YaPvld USzdTb X4Mf1d')
-        for (let i = 0; i < emailRows.length; i++) {
-            const emailRow = emailRows[i]
-            const email = emailRow.getAttribute('data-hovercard-id')
-            const emailInGcalList = gcalEmailList.some(e => e.email === email)
-            const emailInContactList = contactEmailList.some(e => e.email === email)
-            if (!emailInGcalList && !emailInContactList) {
-                const removeButton = emailRow.children[2].children[0].children[2]
-                removeButton.click()
-            }
+    const emails = emailRows()
+    const emailsWithNoAvatar = []
+    for (let i = 0; i < emails.length; i++) {
+        const emailRow = emails[i]
+        const email = emailRow.getAttribute('data-hovercard-id')
+        const emailInGcalList = gcalEmailList.some(e => e.email === email)
+        const emailInContactList = contactEmailList.some(e => e.email === email)
+        if (!emailInGcalList && !emailInContactList) {
+            const removeButton = emailRow.children[2].children[0].children[2]
+            emailsWithNoAvatar.unshift(removeButton)
         }
-    }, 500)
+    }
+    emailsWithNoAvatar.forEach(e => e.click())
 
-}
-
-// "jPtXgd" is all of the listed email avatars
-function emailAvatars() {
-    return document.getElementsByClassName('jPtXgd')
 }
 
 async function openImages() {
-    const userEmail = document.getElementsByClassName('gb_C gb_Ma gb_h')[0]
-        .outerHTML
     const emailListString = await GM.getValue('gcalEmailList')
     const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
     const emailList = JSON.parse(emailListString)
@@ -357,9 +366,6 @@ async function openImages() {
     ]
     for (let i = 0; i < mergedEmailList.length; i++) {
         const newEmail = mergedEmailList[i].email
-        if (userEmail.includes(newEmail)) {
-            continue
-        }
         const imgUrl = mergedEmailList[i].avatar
         const oldEmails = (await GM.getValue(imgUrl))?.split(' ') ?? []
         const oldEmailsFiltered = oldEmails.filter(e => e.includes('@')).join(' ')
@@ -386,16 +392,12 @@ async function pasteEmailList() {
 }
 
 function clearEmailList() {
-    // This is the "Make Optional" and "Remove" array
-    const closeButtonArray = document.getElementsByClassName(
-        'U26fgb mUbCce fKz7Od rF3YF Vp20je vPJzRc M9Bg4d'
-    )
-    let a = closeButtonArray.length
-    for (let i = 0; i < a; i++) {
-        // Every third entry in the array is the remove button. Removing deletes from the array so cycling
-        // the third index for the length of the array will remove all emails listed
-        closeButtonArray[2].click()
+    const emails = emailRows()
+    const removeButtons = []
+    for (let i = 0; i < emails.length; i++) {
+        removeButtons.unshift(emails[i].children[2].children[0].children[2])
     }
+    removeButtons.forEach(b => b.click())
 }
 
 // Create a button with the profile's email that can be clicked to copy to clipboard
@@ -466,6 +468,15 @@ if (location.hostname === 'calendar.google.com') {
     setInterval(upscaleAvatars, 200)
     setInterval(storeGcalEmails, 200)
     setInterval(removeEmailsWithoutAvatarFromList, 200)
+
+    // Wait until user email exists
+    const waitUntilUserEmailExists = setInterval(() => {
+        const email = userEmail()
+        if (email) {
+            clearInterval(waitUntilUserEmailExists)
+            GM.setValue('userEmail', email)
+        }
+    }, 100)
 }
 
 if (location.hostname.includes('contacts')) {
