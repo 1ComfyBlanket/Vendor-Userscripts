@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      1.13
+// @version      2.0
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -236,7 +236,7 @@ function hoverCardOpenEmailAvatar() {
  *. Persist Gcal and Google Contacts sidebar emails in storage
  ********/
 
-function storeSidebarContactsEmails() {
+async function storeSidebarContactsEmails() {
     const emailRows = document.getElementsByClassName('hRP3bd')
     let emailList = []
     let emailListFiltered = []
@@ -271,9 +271,15 @@ function storeSidebarContactsEmails() {
     const emailListFilteredString = JSON.stringify(emailListFiltered)
     GM.setValue('contactEmailList', emailListString)
     GM.setValue('contactEmailListFiltered', emailListFilteredString)
+
+    const contactEmailListCount = await GM.getValue('contactEmailListCount')
+    if (contactEmailListCount !== emailListFiltered.length) {
+        GM.setValue('contactEmailListCount', emailListFiltered.length)
+        GM.setValue('contactEmailListUpdated', true)
+    }
 }
 
-function storeGcalEmails() {
+async function storeGcalEmails() {
     const emailRows = emailAvatars()
     let emailList = []
     for (let i = 0; i < emailRows.length; i++) {
@@ -285,16 +291,52 @@ function storeGcalEmails() {
             .split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
         if (!imageUrl.includes(DEFAULT_USER_AVATAR) && !imageUrl.includes(DEFAULT_INITIAL_AVATAR)) {
-            emailList.push({ email: email, avatar: imageUrl })
+            emailList.push({ email: email, avatar: imageUrl})
         }
     }
     const emailListString = JSON.stringify(emailList)
     GM.setValue('gcalEmailList', emailListString)
+
+    const gcalEmailListCount = await GM.getValue('gcalEmailListCount')
+    if (gcalEmailListCount !== emailList.length) {
+        GM.setValue('gcalEmailListCount', emailList.length)
+        GM.setValue('gcalEmailListUpdated', true)
+    }
 }
 
 /****
  *. End of implementation for persisting Gcal and Google Contacts sidebar emails in storage
  ********/
+
+async function removeEmailsWithoutAvatarFromList() {
+    const contactEmailListUpdated = await GM.getValue('contactEmailListUpdated')
+    const gcalEmailListUpdated = await GM.getValue('gcalEmailListUpdated')
+    if (!contactEmailListUpdated && !gcalEmailListUpdated) { return }
+    GM.setValue('contactEmailListUpdated', false)
+    GM.setValue('gcalEmailListUpdated', false)
+
+    const gcalEmailListString = await GM.getValue('gcalEmailList')
+    const contactEmailListString = await GM.getValue('contactEmailListFiltered')
+    const gcalEmailList = JSON.parse(gcalEmailListString)
+    const contactEmailList = JSON.parse(contactEmailListString)
+    if (gcalEmailList.length === 0 && contactEmailList.length === 0) { return }
+
+    // Must be delayed to allow possible avatars to load and exist
+    setTimeout(() => {
+        const emailRows = document.getElementsByClassName('kMp0We Wm6kRe YaPvld USzdTb X4Mf1d')
+        for (let i = 0; i < emailRows.length; i++) {
+            const emailRow = emailRows[i]
+            const email = emailRow.getAttribute('data-hovercard-id')
+            const emailInGcalList = gcalEmailList.some(e => e.email === email)
+            const emailInContactList = contactEmailList.some(e => e.email === email)
+            if (!emailInGcalList && !emailInContactList) {
+                const removeButton = emailRow.children[2].children[0].children[2]
+                removeButton.click()
+            }
+        }
+    }, 500)
+
+}
 
 // "jPtXgd" is all of the listed email avatars
 function emailAvatars() {
@@ -394,7 +436,6 @@ function reverseImageSearchButton() {
 
 async function autoEmailInput() {
     GM.setValue('emailTask', 'false')
-    // Simulate a React change in order to change the value of an input field
 
     // Returns both location and guest input field and selects the field that is 320px wide as that is the email field
     let input = document.getElementsByClassName('whsOnd zHQkBf')
@@ -411,25 +452,6 @@ async function autoEmailInput() {
     input.focus()
     input.select()
     document.execCommand('insertText', false, emails)
-
-    // Gcal seems to accept inputs if its done while it's the active tab, more testing required
-    // setTimeout(() => {
-    //     const event = new Event('input', { bubbles: true })
-    //     event.simulated = true
-    //     const tracker = input._valueTracker
-    //     if (tracker) {
-    //         tracker.setValue(lastValue)
-    //     }
-    //     input.dispatchEvent(event)
-    //
-    // // Simulate enter key to input emails
-    // const enterKey = new KeyboardEvent('keydown', {
-    //     bubbles: true,
-    //     cancelable: true,
-    //     keyCode: 13,
-    // })
-    // input.dispatchEvent(enterKey)
-    // }, 2000)
 }
 
 if (location.hostname === 'calendar.google.com') {
@@ -443,6 +465,7 @@ if (location.hostname === 'calendar.google.com') {
     setInterval(checkEmails, 100)
     setInterval(upscaleAvatars, 200)
     setInterval(storeGcalEmails, 200)
+    setInterval(removeEmailsWithoutAvatarFromList, 200)
 }
 
 if (location.hostname.includes('contacts')) {
@@ -520,8 +543,7 @@ function spanEmailArray() {
 function upscaleAvatars() {
     const imageArray = emailAvatars()
     const defaultRes = 's24'
-    for (let i = 1; i < imageArray.length; i++) {
-        // First index is skipped since it's your own avatar
+    for (let i = 0; i < imageArray.length; i++) {
         if (
             !imageArray[i].outerHTML.includes(defaultRes) ||
             imageArray[i].outerHTML.includes(DEFAULT_USER_AVATAR)
@@ -540,7 +562,7 @@ function upscaleAvatars() {
             ].parentElement.outerHTML = `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;${imageParentUpscale[2]}`
     }
     // Scan for hovercard mismatches
-    for (let i = 1; i < spanEmailArray().length; i++) {
+    for (let i = 0; i < spanEmailArray().length; i++) {
         let spanEmail = spanEmailArray()[i].innerText.replace(/\./g, '')
         let spanEmailElement = spanEmailArray()[i]
         let hoverCardEmail = spanEmailArray()[
