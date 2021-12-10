@@ -129,17 +129,17 @@ function createButtons() {
     openAvatarsButton.className = SEARCH_BUTTON_CSS_CLASS
 
     // "Copy Contacts" button
-    const CopyEmailsButton = document.createElement('a')
-    CopyEmailsButton.addEventListener(
+    const copyEmailsButton = document.createElement('a')
+    copyEmailsButton.addEventListener(
         'click',
         () => {
             GM.setValue('gcalToAcornCopyEmails', true)
         },
         false
     )
-    CopyEmailsButton.appendChild(document.createTextNode('Copy Contacts'))
-    openAvatar.parentNode.insertBefore(CopyEmailsButton, openAvatar)
-    CopyEmailsButton.className = SEARCH_BUTTON_CSS_CLASS
+    copyEmailsButton.appendChild(document.createTextNode('Copy Contacts'))
+    openAvatar.parentNode.insertBefore(copyEmailsButton, openAvatar)
+    copyEmailsButton.className = SEARCH_BUTTON_CSS_CLASS
 
     // "Clear All" button
     const clearEmailsButtons = document.createElement('a')
@@ -355,8 +355,7 @@ async function removeEmailsWithoutAvatarFromList() {
     setTimeout(() => {
         const emails = emailRows()
         const emailsWithNoAvatar = []
-        for (let i = 0; i < emails.length; i++) {
-            const emailRow = emails[i]
+        for (let emailRow of emails) {
             const email = emailRow.getAttribute('data-hovercard-id')
             const emailInGcalList = gcalEmailList.some(e => e.email === email)
             const emailInContactList = contactEmailList.some(e => e.email === email)
@@ -409,8 +408,8 @@ async function pasteEmailList() {
 function clearEmailList() {
     const emails = emailRows()
     const removeButtons = []
-    for (let i = 0; i < emails.length; i++) {
-        removeButtons.unshift(emails[i].children[2].children[0].children[2])
+    for (let email of emails) {
+        removeButtons.unshift(email.children[2].children[0].children[2])
     }
     removeButtons.forEach(b => b.click())
 }
@@ -587,25 +586,6 @@ function upscaleAvatars() {
         imageArray[
             i
             ].parentElement.outerHTML = `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;${imageParentUpscale[2]}`
-    }
-    // Scan for hovercard mismatches
-    for (let i = 0; i < spanEmailArray().length; i++) {
-        let spanEmail = spanEmailArray()[i].innerText.replace(/\./g, '')
-        let spanEmailElement = spanEmailArray()[i]
-        let hoverCardEmail = spanEmailArray()[
-            i
-            ].parentElement.parentElement.parentElement.parentElement.parentElement.dataset.hovercardId.replace(
-            /\./g,
-            ''
-        )
-        if (
-            spanEmail === hoverCardEmail ||
-            !spanEmail.includes('@') ||
-            spanEmailElement.className === 'exposedEmail'
-        ) {
-            continue
-        }
-        spanEmailElement.className = 'exposedEmail'
     }
 }
 
