@@ -108,8 +108,18 @@ function createButtons() {
     openAvatarsButton.addEventListener('click', openImages, false)
     openAvatarsButton.appendChild(document.createTextNode('Open Images'))
     const openAvatar = guestTab()[0]
-    openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar.nextSibling)
+    openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar)
     openAvatarsButton.className = SEARCH_BUTTON_CSS_CLASS
+
+    // "Copy Contacts" button (disabled until new Gcal task is implemented)
+    const CopyEmailsButton = document.createElement('a')
+    CopyEmailsButton.addEventListener('click', () => { GM.setValue('gcalToAcornCopyEmails', true) }, false)
+    CopyEmailsButton.appendChild(document.createTextNode('Copy Contacts'))
+    openAvatar.parentNode.insertBefore(
+        CopyEmailsButton,
+        openAvatar
+    )
+    CopyEmailsButton.className = SEARCH_BUTTON_CSS_CLASS
 
     // "Clear All" button
     const clearEmailsButtons = document.createElement('a')
@@ -117,19 +127,9 @@ function createButtons() {
     clearEmailsButtons.appendChild(document.createTextNode('Clear All'))
     openAvatar.parentNode.insertBefore(
         clearEmailsButtons,
-        openAvatar.nextSibling.nextSibling
+        openAvatar
     )
     clearEmailsButtons.className = SEARCH_BUTTON_CSS_CLASS
-
-    // "Copy All" button (disabled until new Gcal task is implemented)
-    // const CopyEmailsButton = document.createElement('a')
-    // CopyEmailsButton.addEventListener('click', copyEmailList, false)
-    // CopyEmailsButton.appendChild(document.createTextNode('Copy All'))
-    // openAvatar.parentNode.insertBefore(
-    //     CopyEmailsButton,
-    //     openAvatar.nextSibling.nextSibling
-    // )
-    // CopyEmailsButton.className = SEARCH_BUTTON_CSS_CLASS
 }
 
 // Create and place buttons for Contacts
@@ -331,11 +331,16 @@ async function openImages() {
     }
 }
 
-async function copyEmailList() {
-    const emailListString = await GM.getValue('contactEmailList')
-    const emailList = JSON.parse(emailListString)
-    const emailListFilteredString = await GM.getValue('contactEmailListFiltered')
-    const emailListFiltered = JSON.parse(emailListFilteredString)
+async function pasteEmailList() {
+    const gcalToAcornCopyEmails = await GM.getValue('gcalToAcornCopyEmails')
+    if (gcalToAcornCopyEmails) {
+        GM.setValue('gcalToAcornCopyEmails', false)
+        const emailList = await GM.getValue('contactEmailList')
+        const googleContactsInput = document.getElementById('google-contacts-input')
+        googleContactsInput.focus()
+        googleContactsInput.select()
+        document.execCommand('insertText', false, emailList)
+    }
 }
 
 function clearEmailList() {
@@ -402,8 +407,10 @@ async function autoEmailInput() {
         }
     }
 
-    const lastValue = input.value
-    input.value = await GM.getValue('emaiList')
+    const emails = await GM.getValue('emaiList')
+    input.focus()
+    input.select()
+    document.execCommand('insertText', false, emails)
 
     // Gcal seems to accept inputs if its done while it's the active tab, more testing required
     // setTimeout(() => {
@@ -414,8 +421,8 @@ async function autoEmailInput() {
     //         tracker.setValue(lastValue)
     //     }
     //     input.dispatchEvent(event)
-
-    // Simulate enter key to input emails
+    //
+    // // Simulate enter key to input emails
     // const enterKey = new KeyboardEvent('keydown', {
     //     bubbles: true,
     //     cancelable: true,
@@ -477,7 +484,7 @@ function copyEmails() {
     // Add event handler to "Copy Emails" button
     copyEmailsButton = document.querySelector(
         '#react-root > div > div > div > div.flex.flex-col.min-w-0.flex-1.overflow-hidden > div > main > article > div.mx-auto.pb-24 > div > div.fixed.bg-white.py-4.px-8.z-10.border-b.border-b-eee > div > div.ml-6.mt-0\\.5 > div'
-    )
+    ) ?? document.getElementById('copy-emails-button')
     if (!copyEmailsButton) {
         return
     }
@@ -558,6 +565,7 @@ if (
     location.href.includes('localhost:8083')
 ) {
     setInterval(copyEmails, 100)
+    setInterval(pasteEmailList, 200)
 }
 
 // Copy email button for admin portal
