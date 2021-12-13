@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      2.1
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -262,12 +262,10 @@ async function storeSidebarContactsEmails() {
         const emails = emailRows[i].parentElement.nextSibling.children
         let imageUrl = emailRows[i].src.split('=')[0]
         imageUrl = `${imageUrl}=s1000-p-k-rw-no`
-        const defaultAvatar = imageUrl.length <= DEFAULT_AVATAR_IMG_LEN
         for (let i = 0; i < emails.length; i++) {
             const email = emails[i].innerText
             emailList.push({ email: email, avatar: imageUrl })
             if (
-                !defaultAvatar &&
                 email.includes('@') &&
                 !imageUrl.includes(DEFAULT_USER_AVATAR) &&
                 !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
@@ -389,7 +387,9 @@ async function openImages() {
             const emails = `${oldEmailsFiltered} ${newEmail}`.trim()
             GM.setValue(imgUrl, emails)
         }
-        window.open(imgUrl)
+        if (imgUrl.length > DEFAULT_AVATAR_IMG_LEN) {
+            window.open(imgUrl)
+        }
     }
 }
 
