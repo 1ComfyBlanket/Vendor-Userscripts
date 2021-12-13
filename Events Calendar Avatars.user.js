@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.2
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -20,8 +20,8 @@
 
 const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
 const DEFAULT_USER_AVATAR = 'default-user'
-const DEFAULT_AVATAR_IMG_LEN = 97
 const DEFAULT_INITIAL_AVATAR = '/a/'
+const ORIGINAL_AVATAR_SIZE = 's0-p-k-rw-no'
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -182,7 +182,7 @@ function contactOpenEmailAvatars() {
         let imageLink = imageArray[i].nextSibling.outerHTML
             .split('"')[5]
             .split('s36')
-        imageLink = `${imageLink[0]}s1000${imageLink[1]}`
+        imageLink = `${imageLink[0]}${ORIGINAL_AVATAR_SIZE}`
         if (uniqueImages.includes(imageLink)) {
             continue
         }
@@ -237,7 +237,7 @@ function hoverCardOpenEmailAvatar() {
         imageLinkIdx = 3
     }
     let imageLink = this.outerHTML.split('"')[imageLinkIdx].split('=')
-    imageLink = `${imageLink[0]}=s1000-p-k-rw-no`
+    imageLink = `${imageLink[0]}=${ORIGINAL_AVATAR_SIZE}`
     if (imageLink.includes(DEFAULT_USER_AVATAR)) {
         return
     }
@@ -261,7 +261,7 @@ async function storeSidebarContactsEmails() {
     for (let i = 0; i < emailRows.length; i++) {
         const emails = emailRows[i].parentElement.nextSibling.children
         let imageUrl = emailRows[i].src.split('=')[0]
-        imageUrl = `${imageUrl}=s1000-p-k-rw-no`
+        imageUrl = `${imageUrl}=${ORIGINAL_AVATAR_SIZE}`
         for (let i = 0; i < emails.length; i++) {
             const email = emails[i].innerText
             emailList.push({ email: email, avatar: imageUrl })
@@ -310,7 +310,7 @@ async function storeGcalEmails() {
             .getAttribute('style')
             .split('"')[1]
             .split('=')[0]
-        imageUrl = `${imageUrl}=s1000-p-k-rw-no`
+        imageUrl = `${imageUrl}=${ORIGINAL_AVATAR_SIZE}`
         if (
             !imageUrl.includes(DEFAULT_USER_AVATAR) &&
             !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
@@ -387,9 +387,7 @@ async function openImages() {
             const emails = `${oldEmailsFiltered} ${newEmail}`.trim()
             GM.setValue(imgUrl, emails)
         }
-        if (imgUrl.length > DEFAULT_AVATAR_IMG_LEN) {
-            window.open(imgUrl)
-        }
+        window.open(imgUrl)
     }
 }
 
@@ -521,6 +519,9 @@ if (location.hostname === 'lh3.googleusercontent.com') {
             clearInterval(waitUntilBody)
             copyEmailClipboard()
             reverseImageSearchButton()
+            if(document.title.includes('(2560×2560)')) {
+                close()
+            }
         }
     }, 10)
 }
