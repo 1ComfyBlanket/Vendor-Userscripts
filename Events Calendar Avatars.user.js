@@ -22,6 +22,7 @@ const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
 const DEFAULT_USER_AVATAR = 'default-user'
 const DEFAULT_INITIAL_AVATAR = '/a/'
 const ORIGINAL_AVATAR_SIZE = 's0-p-k-rw-no'
+const DEFAULT_USER_AVATAR_SIZE = '(2560×2560)'
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -519,7 +520,7 @@ if (location.hostname === 'lh3.googleusercontent.com') {
             clearInterval(waitUntilBody)
             copyEmailClipboard()
             reverseImageSearchButton()
-            if(document.title.includes('(2560×2560)')) {
+            if(document.title.includes(DEFAULT_USER_AVATAR_SIZE)) {
                 close()
             }
         }
