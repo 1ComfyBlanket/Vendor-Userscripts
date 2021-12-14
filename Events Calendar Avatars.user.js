@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -293,7 +293,9 @@ async function storeSidebarContactsEmails() {
     const contactEmailListCount = await GM.getValue('contactEmailListCount')
     if (contactEmailListCount !== emailListFiltered.length) {
         GM.setValue('contactEmailListCount', emailListFiltered.length)
-        GM.setValue('contactEmailListUpdated', true)
+        if (emailListFiltered.length !== 0) {
+            GM.setValue('contactEmailListUpdated', true)
+        }
     }
 }
 
@@ -326,7 +328,9 @@ async function storeGcalEmails() {
     const gcalEmailListCount = await GM.getValue('gcalEmailListCount')
     if (gcalEmailListCount !== emailList.length) {
         GM.setValue('gcalEmailListCount', emailList.length)
-        GM.setValue('gcalEmailListUpdated', true)
+        if (emailList.length !== 0) {
+            GM.setValue('gcalEmailListUpdated', true)
+        }
     }
 }
 
@@ -450,7 +454,13 @@ function reverseImageSearchButton() {
 }
 
 async function autoEmailInput() {
+    const emailTask = await GM.getValue('emailTask')
+    const emails = await GM.getValue('emaiList')
+    if (emailTask !== 'true' || emails === '') {
+        return
+    }
     GM.setValue('emailTask', 'false')
+    clearEmailList()
 
     // Returns both location and guest input field and selects the field that is 320px wide as that is the email field
     let input = document.getElementsByClassName('whsOnd zHQkBf')
@@ -462,11 +472,11 @@ async function autoEmailInput() {
             input = input[i]
         }
     }
-
-    const emails = await GM.getValue('emaiList')
     input.focus()
     input.select()
     document.execCommand('insertText', false, emails)
+    const enter = new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' })
+    input.dispatchEvent(enter)
 }
 
 if (location.hostname === 'calendar.google.com') {
@@ -477,7 +487,7 @@ if (location.hostname === 'calendar.google.com') {
             createButtons()
         }
     }, 10)
-    setInterval(checkEmails, 100)
+    setInterval(autoEmailInput, 200)
     setInterval(upscaleAvatars, 200)
     setInterval(storeGcalEmails, 200)
     setInterval(removeEmailsWithoutAvatarFromList, 200)
@@ -520,7 +530,7 @@ if (location.hostname === 'lh3.googleusercontent.com') {
             clearInterval(waitUntilBody)
             copyEmailClipboard()
             reverseImageSearchButton()
-            if(document.title.includes(DEFAULT_USER_AVATAR_SIZE)) {
+            if (document.title.includes(DEFAULT_USER_AVATAR_SIZE)) {
                 close()
             }
         }
@@ -529,7 +539,6 @@ if (location.hostname === 'lh3.googleusercontent.com') {
 
 // Automatically open gcal avatars after clicking on "Copy Emails" in Acorn
 let copyEmailsButton
-let autoEmailProcess
 function copyEmails() {
     // Add event handler to "Copy Emails" button
     copyEmailsButton =
@@ -552,16 +561,6 @@ function openCalendar() {
     GM.setValue('emailTask', 'true')
 }
 
-async function checkEmails() {
-    const emailTaskExists = await GM.getValue('emailTask')
-    const emailList = await GM.getValue('emaiList')
-    if (emailTaskExists !== 'true' || emailList === '') {
-        return
-    }
-    autoEmailProcess = true
-    autoEmailInput()
-}
-
 // Upscale avatars; Max size is 40x40, upscaled to 160x160 for sharpness
 const upscaleRes = 's160'
 function spanEmailArray() {
@@ -579,11 +578,17 @@ function upscaleAvatars() {
             continue
         }
         const imageUpscale = avatar.getAttribute('style').split(defaultRes)
-        avatar.setAttribute('style', `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`)
-        const imageParentUpscale = avatar.parentElement.getAttribute('style').split(
-            '24px;'
+        avatar.setAttribute(
+            'style',
+            `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
         )
-        avatar.parentElement.setAttribute('style', `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;`)
+        const imageParentUpscale = avatar.parentElement
+            .getAttribute('style')
+            .split('24px;')
+        avatar.parentElement.setAttribute(
+            'style',
+            `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;`
+        )
     }
 }
 
