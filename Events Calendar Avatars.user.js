@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.4
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -11,11 +11,13 @@
 // @match        https://getcovey.com/covey/admin*
 // @match        http://localhost:8080/covey/admin*
 // @match        https://contacts.google.com/*
+// @match        https://www.linkedin.com/*
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        GM.setValue
 // @grant        GM.getValue
 // @grant        GM.deleteValue
 // @grant        GM.setClipboard
+// @grant        window.close
 // ==/UserScript==
 
 const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
@@ -561,11 +563,37 @@ function openCalendar() {
     GM.setValue('emailTask', 'true')
 }
 
+let linkedinButton
+function createLinkedinButton() {
+    // Add event handler to Linkedin button
+    linkedinButton = document.getElementsByClassName('inline-block text-center rounded-sm align-text-top cursor-pointer ml-2')[0]
+    if (!linkedinButton) {
+        return
+    }
+
+    linkedinButton.removeEventListener('click', setLinkedinHandleValue)
+    linkedinButton.addEventListener('click', setLinkedinHandleValue, false)
+}
+
+function setLinkedinHandleValue() {
+    const extensionTask = document.getElementsByClassName('text-lg leading-6 font-medium text-gray-900')[0]?.innerText === 'LinkedIn Profile'
+    if (!extensionTask) {
+        GM.setValue('currentLinkedinHandle', '')
+        return
+    }
+    const linkedinHandle = this.nextElementSibling.innerText
+    GM.setValue('currentLinkedinHandle', linkedinHandle)
+}
+
+async function closeLinkedInTab() {
+    const linkedinHandle = await GM.getValue('currentLinkedinHandle')
+    if (!window.location.href.includes(linkedinHandle) && linkedinHandle && !document.hasFocus()) {
+        window.close()
+    }
+}
+
 // Upscale avatars; Max size is 40x40, upscaled to 160x160 for sharpness
 const upscaleRes = 's160'
-function spanEmailArray() {
-    return document.getElementsByClassName('cHB8o')
-}
 
 function upscaleAvatars() {
     const avatars = emailAvatars()
@@ -596,8 +624,17 @@ if (
     location.hostname === 'acornapp.net' ||
     location.href.includes('localhost:8083')
 ) {
+    GM.setValue('currentLinkedinHandle', '')
     setInterval(copyEmails, 100)
     setInterval(pasteEmailList, 200)
+    setInterval(createLinkedinButton, 200)
+}
+
+if (location.hostname === 'www.linkedin.com') {
+    setInterval(closeLinkedInTab, 500)
+    setTimeout(() => {
+        GM.setValue('currentLinkedinHandle', '')
+    }, 1000)
 }
 
 // Copy email button for admin portal
