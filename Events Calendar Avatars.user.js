@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      2.41
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -370,7 +370,7 @@ async function removeEmailsWithoutAvatarFromList() {
             }
         }
         emailsWithNoAvatar.forEach(e => e.click())
-    }, 500)
+    }, 1500)
 }
 
 async function openImages() {
@@ -533,7 +533,7 @@ if (location.hostname === 'lh3.googleusercontent.com') {
             copyEmailClipboard()
             reverseImageSearchButton()
             if (document.title.includes(DEFAULT_USER_AVATAR_SIZE)) {
-                close()
+                setTimeout(() => { window.close() }, 500)
             }
         }
     }, 10)
