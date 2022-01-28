@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.42
+// @version      2.43
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -325,22 +325,41 @@ async function storeGcalEmails() {
  ********/
 
 async function removeEmailsWithoutAvatarFromList() {
-    const gcalEmailListString = await GM.getValue('gcalEmailList')
-    const contactEmailListString = await GM.getValue('contactEmailListFiltered')
-    const gcalEmailList = JSON.parse(gcalEmailListString)
-    const contactEmailList = JSON.parse(contactEmailListString)
-    const emails = emailRows()
-    const emailsWithNoAvatar = []
-    for (let emailRow of emails) {
-        const email = emailRow.getAttribute('data-hovercard-id')
-        const emailInGcalList = gcalEmailList.some(e => e.email === email)
-        const emailInContactList = contactEmailList.some(e => e.email === email)
-        if (!emailInGcalList && !emailInContactList) {
-            const removeButton = emailRow.children[2].children[0].children[2]
-            emailsWithNoAvatar.unshift(removeButton)
-        }
+    const functionInProgress = await GM.getValue(
+        'removeEmailsWithoutAvatarFromList'
+    )
+    if (functionInProgress) {
+        return
     }
-    emailsWithNoAvatar.forEach(e => e.click())
+    GM.setValue('removeEmailsWithoutAvatarFromList', true)
+    // Waits until page is visible and delays to allow avatars to load
+    const waitUntilPageIsVisible = setInterval(() => {
+        if (document.hidden) {
+            return
+        }
+        clearInterval(waitUntilPageIsVisible)
+        setTimeout(async () => {
+            const gcalEmailListString = await GM.getValue('gcalEmailList')
+            const contactEmailListString = await GM.getValue(
+                'contactEmailListFiltered'
+            )
+            const gcalEmailList = JSON.parse(gcalEmailListString)
+            const contactEmailList = JSON.parse(contactEmailListString)
+            const emails = emailRows()
+            const emailsWithNoAvatar = []
+            for (let emailRow of emails) {
+                const email = emailRow.getAttribute('data-hovercard-id')
+                const emailInGcalList = gcalEmailList.some(e => e.email === email)
+                const emailInContactList = contactEmailList.some(e => e.email === email)
+                if (!emailInGcalList && !emailInContactList) {
+                    const removeButton = emailRow.children[2].children[0].children[2]
+                    emailsWithNoAvatar.unshift(removeButton)
+                }
+            }
+            emailsWithNoAvatar.forEach(e => e.click())
+            GM.setValue('removeEmailsWithoutAvatarFromList', false)
+        }, 1500)
+    }, 100)
 }
 
 async function openImages() {
@@ -428,11 +447,12 @@ function reverseImageSearchButton() {
 async function autoEmailInput() {
     const emailTask = await GM.getValue('emailTask')
     const emails = await GM.getValue('emaiList')
-    if (emailTask !== 'true' || emails === '') {
+    if (!emailTask || emails === '') {
         return
     }
-    GM.setValue('emailTask', 'false')
+    GM.setValue('emailTask', false)
     clearEmailList()
+    await removeEmailsWithoutAvatarFromList()
 
     // Returns both location and guest input field and selects the field that is 320px wide as that is the email field
     let input = document.getElementsByClassName('whsOnd zHQkBf')
@@ -462,13 +482,6 @@ if (location.hostname === 'calendar.google.com') {
     setInterval(autoEmailInput, 200)
     setInterval(upscaleAvatars, 200)
     setInterval(storeGcalEmails, 200)
-
-    // This fires only when the Gcal tab gains focus with a 1 second delay to give avatars time to load before filtering
-    window.onfocus = function() {
-        setTimeout(() => {
-            void removeEmailsWithoutAvatarFromList()
-        }, 1500)
-    }
 
     // Wait until user email exists
     const waitUntilUserEmailExists = setInterval(() => {
@@ -538,7 +551,7 @@ function openCalendar() {
         GM.setClipboard(emailList)
     }, 500)
     GM.setValue('emaiList', emailList)
-    GM.setValue('emailTask', 'true')
+    GM.setValue('emailTask', true)
 }
 
 function setLinkedinHandleValue() {
@@ -567,6 +580,7 @@ async function closeLinkedInTab() {
         linkedinHandle &&
         !document.hasFocus()
     ) {
+        GM.setClipboard('WRONG PROFILE, CHECK AGAIN')
         window.close()
     }
 }
@@ -643,7 +657,7 @@ function openCalendarAdmin() {
         GM.setClipboard(emailList)
     }, 500)
     GM.setValue('emaiList', emailList)
-    GM.setValue('emailTask', 'true')
+    GM.setValue('emailTask', true)
 }
 
 if (
