@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.43
+// @version      2.44
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -623,12 +623,13 @@ if (
     setInterval(setLinkedinHandleValue, 200)
 }
 
-if (location.hostname === 'www.linkedin.com') {
-    setInterval(closeLinkedInTab, 500)
-    setTimeout(() => {
-        GM.setValue('currentLinkedinHandle', '')
-    }, 1000)
-}
+// Disabled until fix for recruiter lite
+// if (location.hostname === 'www.linkedin.com') {
+//   setInterval(closeLinkedInTab, 500)
+//   setTimeout(() => {
+//     GM.setValue('currentLinkedinHandle', '')
+//   }, 1000)
+// }
 
 // Copy email button for admin portal
 function copyEmailsAdmin() {
