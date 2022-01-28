@@ -464,14 +464,11 @@ if (location.hostname === 'calendar.google.com') {
     setInterval(storeGcalEmails, 200)
 
     // This fires only when the Gcal tab gains focus with a 1 second delay to give avatars time to load before filtering
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            return
-        }
+    window.onfocus = function() {
         setTimeout(() => {
             void removeEmailsWithoutAvatarFromList()
         }, 1500)
-    })
+    }
 
     // Wait until user email exists
     const waitUntilUserEmailExists = setInterval(() => {
