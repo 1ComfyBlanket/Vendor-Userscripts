@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.41
+// @version      2.42
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -291,14 +291,6 @@ async function storeSidebarContactsEmails() {
     const emailListFilteredString = JSON.stringify(emailListFiltered)
     GM.setValue('contactEmailList', emailListString)
     GM.setValue('contactEmailListFiltered', emailListFilteredString)
-
-    const contactEmailListCount = await GM.getValue('contactEmailListCount')
-    if (contactEmailListCount !== emailListFiltered.length) {
-        GM.setValue('contactEmailListCount', emailListFiltered.length)
-        if (emailListFiltered.length !== 0) {
-            GM.setValue('contactEmailListUpdated', true)
-        }
-    }
 }
 
 async function storeGcalEmails() {
@@ -326,14 +318,6 @@ async function storeGcalEmails() {
     }
     const emailListString = JSON.stringify(emailList)
     GM.setValue('gcalEmailList', emailListString)
-
-    const gcalEmailListCount = await GM.getValue('gcalEmailListCount')
-    if (gcalEmailListCount !== emailList.length) {
-        GM.setValue('gcalEmailListCount', emailList.length)
-        if (emailList.length !== 0) {
-            GM.setValue('gcalEmailListUpdated', true)
-        }
-    }
 }
 
 /****
@@ -345,32 +329,18 @@ async function removeEmailsWithoutAvatarFromList() {
     const contactEmailListString = await GM.getValue('contactEmailListFiltered')
     const gcalEmailList = JSON.parse(gcalEmailListString)
     const contactEmailList = JSON.parse(contactEmailListString)
-    const contactEmailListUpdated = await GM.getValue('contactEmailListUpdated')
-    const gcalEmailListUpdated = await GM.getValue('gcalEmailListUpdated')
-    if (
-        (!contactEmailListUpdated && !gcalEmailListUpdated) ||
-        contactEmailList.length === 0
-    ) {
-        return
-    }
-    GM.setValue('contactEmailListUpdated', false)
-    GM.setValue('gcalEmailListUpdated', false)
-
-    // Must be delayed to allow possible avatars to load and exist
-    setTimeout(() => {
-        const emails = emailRows()
-        const emailsWithNoAvatar = []
-        for (let emailRow of emails) {
-            const email = emailRow.getAttribute('data-hovercard-id')
-            const emailInGcalList = gcalEmailList.some(e => e.email === email)
-            const emailInContactList = contactEmailList.some(e => e.email === email)
-            if (!emailInGcalList && !emailInContactList) {
-                const removeButton = emailRow.children[2].children[0].children[2]
-                emailsWithNoAvatar.unshift(removeButton)
-            }
+    const emails = emailRows()
+    const emailsWithNoAvatar = []
+    for (let emailRow of emails) {
+        const email = emailRow.getAttribute('data-hovercard-id')
+        const emailInGcalList = gcalEmailList.some(e => e.email === email)
+        const emailInContactList = contactEmailList.some(e => e.email === email)
+        if (!emailInGcalList && !emailInContactList) {
+            const removeButton = emailRow.children[2].children[0].children[2]
+            emailsWithNoAvatar.unshift(removeButton)
         }
-        emailsWithNoAvatar.forEach(e => e.click())
-    }, 1500)
+    }
+    emailsWithNoAvatar.forEach(e => e.click())
 }
 
 async function openImages() {
@@ -492,7 +462,16 @@ if (location.hostname === 'calendar.google.com') {
     setInterval(autoEmailInput, 200)
     setInterval(upscaleAvatars, 200)
     setInterval(storeGcalEmails, 200)
-    setInterval(removeEmailsWithoutAvatarFromList, 200)
+
+    // This fires only when the Gcal tab gains focus with a 1 second delay to give avatars time to load before filtering
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            return
+        }
+        setTimeout(() => {
+            void removeEmailsWithoutAvatarFromList()
+        }, 1500)
+    })
 
     // Wait until user email exists
     const waitUntilUserEmailExists = setInterval(() => {
@@ -530,11 +509,13 @@ if (location.hostname === 'lh3.googleusercontent.com') {
     const waitUntilBody = setInterval(() => {
         if (document.getElementsByTagName('img').length) {
             clearInterval(waitUntilBody)
-            copyEmailClipboard()
+            void copyEmailClipboard()
             reverseImageSearchButton()
-            if (document.title.includes(DEFAULT_USER_AVATAR_SIZE)) {
-                setTimeout(() => { window.close() }, 500)
-            }
+            setInterval(() => {
+                if (document.title.includes(DEFAULT_USER_AVATAR_SIZE)) {
+                    window.close()
+                }
+            }, 200)
         }
     }, 10)
 }
@@ -563,31 +544,32 @@ function openCalendar() {
     GM.setValue('emailTask', 'true')
 }
 
-let linkedinButton
-function createLinkedinButton() {
-    // Add event handler to Linkedin button
-    linkedinButton = document.getElementsByClassName('inline-block text-center rounded-sm align-text-top cursor-pointer ml-2')[0]
-    if (!linkedinButton) {
+function setLinkedinHandleValue() {
+    if (!document.hasFocus()) {
         return
     }
-
-    linkedinButton.removeEventListener('click', setLinkedinHandleValue)
-    linkedinButton.addEventListener('click', setLinkedinHandleValue, false)
-}
-
-function setLinkedinHandleValue() {
-    const extensionTask = document.getElementsByClassName('text-lg leading-6 font-medium text-gray-900')[0]?.innerText === 'LinkedIn Profile'
-    if (!extensionTask) {
+    const linkedinButton = document.getElementsByClassName(
+        'inline-block text-center rounded-sm align-text-top cursor-pointer ml-2'
+    )[0]
+    const extensionTask =
+        document.getElementsByClassName(
+            'text-lg leading-6 font-medium text-gray-900'
+        )[0]?.innerText === 'LinkedIn Profile'
+    if (!linkedinButton || !extensionTask) {
         GM.setValue('currentLinkedinHandle', '')
         return
     }
-    const linkedinHandle = this.nextElementSibling.innerText
+    const linkedinHandle = linkedinButton.nextElementSibling.innerText
     GM.setValue('currentLinkedinHandle', linkedinHandle)
 }
 
 async function closeLinkedInTab() {
     const linkedinHandle = await GM.getValue('currentLinkedinHandle')
-    if (!window.location.href.includes(linkedinHandle) && linkedinHandle && !document.hasFocus()) {
+    if (
+        !window.location.href.includes(linkedinHandle) &&
+        linkedinHandle &&
+        !document.hasFocus()
+    ) {
         window.close()
     }
 }
@@ -627,7 +609,7 @@ if (
     GM.setValue('currentLinkedinHandle', '')
     setInterval(copyEmails, 100)
     setInterval(pasteEmailList, 200)
-    setInterval(createLinkedinButton, 200)
+    setInterval(setLinkedinHandleValue, 200)
 }
 
 if (location.hostname === 'www.linkedin.com') {
