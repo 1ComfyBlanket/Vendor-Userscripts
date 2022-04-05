@@ -24,7 +24,7 @@
 // @match        https://www.behance.net/*
 // ==/UserScript==
 
-'use strict'
+const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
 
 // Inject CSS into the page
 function addGlobalStyle(css) {
@@ -113,14 +113,15 @@ function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
         // If exactMatch is enabled then make sure the string is exactly the same, otherwise just loosely search
         // for the string within the element
         if (exactMatch === 0) {
-            for (let i = 0; i < elementArray().length; i++) {
-                if (elementArray()[i].innerText) {
-                    if (elementArray()[i].innerText.includes(stringReturn)) {
+            const elements = elementArray()
+            for (let element of elements) {
+                if (element.innerText) {
+                    if (element.innerText.includes(stringReturn)) {
                         closeClear()
                     }
                 }
-                if (elementArray()[i].currentSrc) {
-                    if (elementArray()[i].currentSrc.includes(stringReturn)) {
+                if (element.currentSrc) {
+                    if (element.currentSrc.includes(stringReturn)) {
                         closeClear()
                     }
                 }
@@ -131,16 +132,16 @@ function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
             if (location.href.includes(stringReturn)) {
                 closeClear()
             }
-            // Check for an exact string match
         } else {
-            for (let i = 0; i < elementArray().length; i++) {
-                if (elementArray()[i].innerText) {
-                    if (elementArray()[i].innerText === stringReturn) {
+            // Check for an exact string match
+            for (let element of elements) {
+                if (element.innerText) {
+                    if (element.innerText === stringReturn) {
                         closeClear()
                     }
                 }
-                if (elementArray()[i].currentSrc) {
-                    if (elementArray()[i].currentSrc === stringReturn) {
+                if (element.currentSrc) {
+                    if (element.currentSrc === stringReturn) {
                         closeClear()
                     }
                 }
@@ -187,7 +188,10 @@ function missingProfile() {
         case 'www.tiktok.com':
             missingProfileElement('jsx-1517828681', `404_face_icon`)
             missingProfileElement('jsx-3565499374', `No encontramos esta cuenta`)
-            missingProfileElement('jsx-3565499374', `Couldn't find this account`)
+            missingProfileElement(
+                'jsx-2275266356 title',
+                `Couldn't find this account`
+            )
             break
         case 'www.facebook.com':
             missingProfileElement('hu5pjgll', `/404/404`)
@@ -255,7 +259,7 @@ function emailSection() {
 }
 
 // Check if user is doing an email task
-function emaiLtask() {
+function emailTask() {
     profileNameArray = document.getElementsByClassName(profileNameClassName)
     emailSectionArray = document.getElementsByClassName(
         emailSectionArrayClassName
@@ -383,8 +387,8 @@ function createSocialMediaButton() {
         emailButtonArray.push(socialMediaButton)
         emailButtonArray.push(googleButton)
         //Set className for CSS
-        socialMediaButton.className = 'searchButton'
-        googleButton.className = 'searchButton'
+        socialMediaButton.className = SEARCH_BUTTON_CSS_CLASS
+        googleButton.className = SEARCH_BUTTON_CSS_CLASS
     }
     // Reset emailHandle to the first index as this is being compared to determine if the profile changed
     emailHandle = emailSection()
@@ -392,6 +396,6 @@ function createSocialMediaButton() {
 
 if (location.hostname.includes('acornapp.net')) {
     setInterval(() => {
-        emaiLtask()
+        emailTask()
     }, 100)
 }

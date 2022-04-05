@@ -26,7 +26,6 @@ const DEFAULT_USER_AVATAR = 'default-user'
 const DEFAULT_INITIAL_AVATAR = '/a/'
 const ORIGINAL_AVATAR_SIZE = 's0-p-k-rw-no'
 const DEFAULT_USER_AVATAR_SIZE = '(2560×2560)'
-GM.setValue('removeEmailsWithoutAvatarFromList', false)
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -580,8 +579,7 @@ async function closeLinkedInTab() {
     if (
         !window.location.href.includes(linkedinHandle) &&
         linkedinHandle &&
-        !document.hasFocus() &&
-        !window.location.href.includes('/talent/profile/')
+        !document.hasFocus()
     ) {
         GM.setClipboard('WRONG PROFILE, CHECK AGAIN')
         window.close()
@@ -626,7 +624,6 @@ if (
     setInterval(setLinkedinHandleValue, 200)
 }
 
-// Disabled until fix for recruiter lite
 if (location.hostname === 'www.linkedin.com') {
     setInterval(closeLinkedInTab, 500)
     setTimeout(() => {
@@ -671,16 +668,9 @@ if (
     setInterval(copyEmailsAdmin, 100)
 }
 
-// Add Gmail guesses to non-Gmail domains
-const emailDomains = [
-    'gmail.com',
-    'outlook.com',
-    'live.com',
-    'hotmail.com',
-    'yahoo.com',
-]
+// Add Gmail guesses  to non-Gmail domains
 function gmailGuess(emailList) {
-    const emailGuessFilter = [
+    const gmailGuessFilter = [
         'me',
         'hello',
         'contact',
@@ -690,29 +680,22 @@ function gmailGuess(emailList) {
     ]
     const emailListArray = emailList.split(' ')
     for (let i = 0; i < emailListArray.length; i++) {
-        let emailHandle = emailListArray[i]
+        if (emailListArray[i].includes('gmail')) {
+            continue
+        }
+        let gmailGuess = emailListArray[i]
             .split('@')
             .shift()
             .toLowerCase()
-        if (emailGuessFilter.includes(emailHandle) || !emailHandle) {
+        if (gmailGuessFilter.includes(gmailGuess)) {
             continue
         }
-
-        for (let i = 0; i < emailDomains.length; i++) {
-            const emailDomain = emailDomains[i]
-            let editedEmailHandle = emailHandle
-            if (emailDomain.includes('gmail') || emailDomain.includes('googlemail')) {
-                editedEmailHandle = emailHandle
-                    .replaceAll('-', '.')
-                    .replaceAll('_', '.')
-            }
-            let emailGuess
-            if (editedEmailHandle) emailGuess = `${editedEmailHandle}@${emailDomain}`
-            if (emailList.includes(emailGuess)) {
-                continue
-            }
-            emailList = `${emailList} ${emailGuess}`
+        gmailGuess = gmailGuess.replaceAll('-', '.').replaceAll('_', '.')
+        if (gmailGuess) gmailGuess = `${gmailGuess}@gmail.com`
+        if (emailList.includes(gmailGuess)) {
+            continue
         }
+        emailList = `${emailList} ${gmailGuess}`
     }
     return emailList
 }
