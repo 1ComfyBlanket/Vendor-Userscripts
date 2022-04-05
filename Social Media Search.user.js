@@ -7,7 +7,7 @@
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        none
 // @match        https://acornapp.net/portal/home*
-// @match        https://acornapp.net/portal/reviewzz*
+// @match        https://acornapp.net/portal/review*
 // @match        https://www.instagram.com/*
 // @match        https://www.pinterest.com/*
 // @match        https://twitter.com/*
