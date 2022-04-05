@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.4.3
+// @version      1.4.5
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        none
-// @match        https://acornapp.net/*
+// @match        https://acornapp.net/portal/home*
+// @match        https://acornapp.net/portal/reviewzz*
 // @match        https://www.instagram.com/*
 // @match        https://www.pinterest.com/*
 // @match        https://twitter.com/*
@@ -23,13 +24,15 @@
 // @match        https://www.behance.net/*
 // ==/UserScript==
 
-'use strict';
+'use strict'
 
 // Inject CSS into the page
 function addGlobalStyle(css) {
     let head, style
     head = document.getElementsByTagName('head')[0]
-    if (!head) { return }
+    if (!head) {
+        return
+    }
     style = document.createElement('style')
     style.type = 'text/css'
     style.innerHTML = css
@@ -61,12 +64,13 @@ addGlobalStyle(`
     }
 `)
 
-
 function searchEmail() {
-    const emailHandle = this.nextSibling.value.split("@", 1)[0]
+    const emailHandle = this.nextSibling.value.split('@', 1)[0]
     // Some websites do not accept usernames with periods or incorrectly parse them
     let emailHandlePeriod = false
-    if (emailHandle.includes('.')) { emailHandlePeriod = true }
+    if (emailHandle.includes('.')) {
+        emailHandlePeriod = true
+    }
     if (emailHandlePeriod === false) {
         window.open(`https://www.github.com/${emailHandle}`)
         window.open(`https://dribbble.com/${emailHandle}`)
@@ -86,8 +90,8 @@ function searchEmail() {
 }
 
 function googleEmail() {
-    const email = this.nextSibling.nextSibling.value;
-    const emailHandle = this.nextSibling.nextSibling.value.split("@")
+    const email = this.nextSibling.nextSibling.value
+    const emailHandle = this.nextSibling.nextSibling.value.split('@')
     window.open(`https://www.google.com/search?q="${email}"`)
     window.open(`https://www.google.com/search?q="${emailHandle[0]}"`)
     // Guess search for handle as a Gmail
@@ -164,12 +168,21 @@ function missingProfile() {
             missingProfileElement('', `show_error=true`)
             break
         case 'twitter.com':
-            missingProfileElement('css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0', `doesn’t exist`)
-            missingProfileElement('css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0', `no existe`)
+            missingProfileElement(
+                'css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0',
+                `doesn’t exist`
+            )
+            missingProfileElement(
+                'css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0',
+                `no existe`
+            )
             break
         case 'github.com':
             missingProfileElement('blue-button text-button', `Reload`)
-            missingProfileElement('d-block text-normal color-text-secondary mb-1 f4', `Find code, projects, and people on GitHub:`)
+            missingProfileElement(
+                'd-block text-normal color-text-secondary mb-1 f4',
+                `Find code, projects, and people on GitHub:`
+            )
             break
         case 'www.tiktok.com':
             missingProfileElement('jsx-1517828681', `404_face_icon`)
@@ -198,8 +211,14 @@ function missingProfile() {
             missingProfileElement('', `404`)
             break
         case 'medium.com':
-            missingProfileElement('dc dd de df dg dh di dj dk dl dm dn da b do dp dq', `404`)
-            missingProfileElement('ck dw dx dy dz ea eb ec ed ee ef eg du b eh ei ej', `404`)
+            missingProfileElement(
+                'dc dd de df dg dh di dj dk dl dm dn da b do dp dq',
+                `404`
+            )
+            missingProfileElement(
+                'ck dw dx dy dz ea eb ec ed ee ef eg du b eh ei ej',
+                `404`
+            )
             break
         case 'dribbble.com':
             missingProfileElement('', `404`)
@@ -208,10 +227,11 @@ function missingProfile() {
             missingProfileElement('', `Behance :: Oops! We can’t find that page.`)
             missingProfileElement('', `¡Vaya! No ha sido`)
             break
-
     }
 }
-if (location.hostname !== 'acornapp.net') { missingProfile() }
+if (location.hostname !== 'acornapp.net') {
+    missingProfile()
+}
 
 // Global vars
 let profileName
@@ -222,31 +242,53 @@ let emailSectionArray
 let emailSectionArrayLength
 let emailFinderTab
 // Class names for elements
-const emailFinderTabClassName = 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-gray-800 text-gray-900 '
+const emailFinderTabClassName =
+    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-gray-800 text-gray-900 '
 const profileNameClassName = 'text-xl font-normal text-gray-900 -mb-1'
 const emailSectionArrayClassName = 'text-sm text-gray-900 font-semibold'
 function emailSection() {
-    if (document.getElementsByClassName(emailSectionArrayClassName).length) { return emailSectionArray[0].innerText.split('@')[0] }
-    else { return [] }
+    if (document.getElementsByClassName(emailSectionArrayClassName).length) {
+        return emailSectionArray[0].innerText.split('@')[0]
+    } else {
+        return []
+    }
 }
 
 // Check if user is doing an email task
 function emaiLtask() {
     profileNameArray = document.getElementsByClassName(profileNameClassName)
-    emailSectionArray = document.getElementsByClassName(emailSectionArrayClassName)
-    if (profileNameArray.length !== 0 || emailSectionArray.length !== 0) { createSocialMediaButton() }
+    emailSectionArray = document.getElementsByClassName(
+        emailSectionArrayClassName
+    )
+    if (profileNameArray.length !== 0 || emailSectionArray.length !== 0) {
+        createSocialMediaButton()
+    }
 }
 
 // Array that contains the email finder tab
-function emailFinderTabArray() { return document.getElementsByClassName('-mb-px flex space-x-8') }
+function emailFinderTabArray() {
+    return document.getElementsByClassName('-mb-px flex space-x-8')
+}
 
 // Destroy all search buttons when profile changes or if new emails are found in Github finder
 function clearOldButtons() {
-    if  ( emailSection().length === 'undefined' || emailFinderTabArray().length === 0) { return }
+    if (
+        emailSection().length === 'undefined' ||
+        emailFinderTabArray().length === 0
+    ) {
+        return
+    }
     emailFinderTab = emailFinderTabArray()[0].children[0].className
-    if (emailHandle !== emailSection() || emailSectionArrayLength !== emailSectionArray.length) {
-        for (let i = 0; i < emailButtonArray.length; i++) { emailButtonArray[i].remove() }
-        for (let i = 0; i < emailSectionArray.length; i++) {  emailSectionArray[i].removeAttribute('id') }
+    if (
+        emailHandle !== emailSection() ||
+        emailSectionArrayLength !== emailSectionArray.length
+    ) {
+        for (let i = 0; i < emailButtonArray.length; i++) {
+            emailButtonArray[i].remove()
+        }
+        for (let i = 0; i < emailSectionArray.length; i++) {
+            emailSectionArray[i].removeAttribute('id')
+        }
         emailButtonArray = []
     }
 }
@@ -259,29 +301,44 @@ function createSocialMediaButton() {
     emailSectionArrayLength = emailSectionArray.length
 
     // Individual email sections are put into an array
-    emailSectionArray = document.getElementsByClassName(emailSectionArrayClassName)
+    emailSectionArray = document.getElementsByClassName(
+        emailSectionArrayClassName
+    )
     // Give each button a unique ID number based on order of the array.
     for (let i = 0; i < emailSectionArray.length; i++) {
         const emailButton = emailSectionArray[i]
         const idString = `email-task-${i}`
-        if (idString === emailButton.id) { continue }
+        if (idString === emailButton.id) {
+            continue
+        }
         emailButton.setAttribute('id', idString)
 
         // Check if user is in the "Email finder" tab
         let emailDeliver
         let abbreviatedNameArray = []
-        if(emailFinderTab === emailFinderTabClassName) {
+        if (emailFinderTab === emailFinderTabClassName) {
             // Filter out emails if they are abbreviated and 0% match confidence
-            if (profileNameArray.length === 0) { continue }
-            let profileNameSplit = profileName.split(' ')                                                        // [john, smith]
+            if (profileNameArray.length === 0) {
+                continue
+            }
+            let profileNameSplit = profileName.split(' ') // [john, smith]
             // Generate abbreviated versions of this name
-            abbreviatedNameArray.push(`${profileNameSplit[0].charAt(0)}${profileNameSplit[1]}`)                  // jsmith
-            abbreviatedNameArray.push(`${profileNameSplit[0].charAt(0)}.${profileNameSplit[1]}`)                 // j.smith
-            abbreviatedNameArray.push(`${profileNameSplit[1]}${profileNameSplit[0].charAt(0)}`)                  // smithj
-            abbreviatedNameArray.push(`${profileNameSplit[1]}.${profileNameSplit[0].charAt(0)}`)                 // smith.j
+            abbreviatedNameArray.push(
+                `${profileNameSplit[0].charAt(0)}${profileNameSplit[1]}`
+            ) // jsmith
+            abbreviatedNameArray.push(
+                `${profileNameSplit[0].charAt(0)}.${profileNameSplit[1]}`
+            ) // j.smith
+            abbreviatedNameArray.push(
+                `${profileNameSplit[1]}${profileNameSplit[0].charAt(0)}`
+            ) // smithj
+            abbreviatedNameArray.push(
+                `${profileNameSplit[1]}.${profileNameSplit[0].charAt(0)}`
+            ) // smith.j
             // Retrieve the match confidence value and email handle
             emailHandle = emailSectionArray[i].innerText.split('@')[0]
-            let divEmailSections = emailSectionArray[i].parentElement.parentElement.nextSibling.children
+            let divEmailSections =
+                emailSectionArray[i].parentElement.parentElement.nextSibling.children
             // If profile has an avatar search one child further
             let emailDeliverNum
             let possibleMatchNum
@@ -289,26 +346,39 @@ function createSocialMediaButton() {
             if (divEmailSections.length === 4) {
                 emailDeliverNum = 2
                 possibleMatchNum = 3
-            }
-            else {
+            } else {
                 emailDeliverNum = 1
                 possibleMatchNum = 2
             }
             // "Email Deliverability" SVG type
-            emailDeliver = divEmailSections[emailDeliverNum].children[0].children[1].children[6].children[0].children[0].className.baseVal
+            emailDeliver =
+                divEmailSections[emailDeliverNum].children[0].children[1].children[6]
+                    .children[0].children[0].className.baseVal
             // Do not create a button if the email is not deliverable or if its an abbreviated name without a possible match
-            if (emailDeliver === 'h-6 w-6 inline-block text-red-400' || (abbreviatedNameArray.includes(emailHandle) && divEmailSections[possibleMatchNum].children.length < 2)) { continue }
+            if (
+                emailDeliver === 'h-6 w-6 inline-block text-red-400' ||
+                (abbreviatedNameArray.includes(emailHandle) &&
+                    divEmailSections[possibleMatchNum].children.length < 2)
+            ) {
+                continue
+            }
         }
         // Create and place the social media search button
         const socialMediaButton = document.createElement('a')
         socialMediaButton.addEventListener('click', searchEmail, false)
         socialMediaButton.appendChild(document.createTextNode('Social'))
-        emailButton.parentNode.insertBefore(socialMediaButton, emailButton.nextSibling.nextSibling)
+        emailButton.parentNode.insertBefore(
+            socialMediaButton,
+            emailButton.nextSibling.nextSibling
+        )
         // Create and place the Google search button
         const googleButton = document.createElement('a')
         googleButton.addEventListener('click', googleEmail, false)
         googleButton.appendChild(document.createTextNode('Google'))
-        emailButton.parentNode.insertBefore(googleButton, emailButton.nextSibling.nextSibling)
+        emailButton.parentNode.insertBefore(
+            googleButton,
+            emailButton.nextSibling.nextSibling
+        )
         // Add to  button array for deletion when profile changes
         emailButtonArray.push(socialMediaButton)
         emailButtonArray.push(googleButton)
@@ -320,4 +390,8 @@ function createSocialMediaButton() {
     emailHandle = emailSection()
 }
 
-if (location.hostname.includes('acornapp.net')) { setInterval(() => { emaiLtask() }, 100) }
+if (location.hostname.includes('acornapp.net')) {
+    setInterval(() => {
+        emaiLtask()
+    }, 100)
+}

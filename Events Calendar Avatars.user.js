@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.44
+// @version      2.45
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
 // @match        https://lh3.googleusercontent.com/*
-// @match        https://acornapp.net/*
+// @match        https://acornapp.net/portal/home*
+// @match        https://acornapp.net/portal/review*
 // @match        http://localhost:8083/*
 // @match        https://getcovey.com/covey/admin*
 // @match        http://localhost:8080/covey/admin*
@@ -25,6 +26,7 @@ const DEFAULT_USER_AVATAR = 'default-user'
 const DEFAULT_INITIAL_AVATAR = '/a/'
 const ORIGINAL_AVATAR_SIZE = 's0-p-k-rw-no'
 const DEFAULT_USER_AVATAR_SIZE = '(2560×2560)'
+GM.setValue('removeEmailsWithoutAvatarFromList', false)
 
 // Disable TrustedHTML for Google Contacts
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
@@ -578,7 +580,8 @@ async function closeLinkedInTab() {
     if (
         !window.location.href.includes(linkedinHandle) &&
         linkedinHandle &&
-        !document.hasFocus()
+        !document.hasFocus() &&
+        !window.location.href.includes('/talent/profile/')
     ) {
         GM.setClipboard('WRONG PROFILE, CHECK AGAIN')
         window.close()
@@ -624,12 +627,12 @@ if (
 }
 
 // Disabled until fix for recruiter lite
-// if (location.hostname === 'www.linkedin.com') {
-//   setInterval(closeLinkedInTab, 500)
-//   setTimeout(() => {
-//     GM.setValue('currentLinkedinHandle', '')
-//   }, 1000)
-// }
+if (location.hostname === 'www.linkedin.com') {
+    setInterval(closeLinkedInTab, 500)
+    setTimeout(() => {
+        GM.setValue('currentLinkedinHandle', '')
+    }, 1000)
+}
 
 // Copy email button for admin portal
 function copyEmailsAdmin() {
@@ -668,9 +671,16 @@ if (
     setInterval(copyEmailsAdmin, 100)
 }
 
-// Add Gmail guesses  to non-Gmail domains
+// Add Gmail guesses to non-Gmail domains
+const emailDomains = [
+    'gmail.com',
+    'outlook.com',
+    'live.com',
+    'hotmail.com',
+    'yahoo.com',
+]
 function gmailGuess(emailList) {
-    const gmailGuessFilter = [
+    const emailGuessFilter = [
         'me',
         'hello',
         'contact',
@@ -680,22 +690,29 @@ function gmailGuess(emailList) {
     ]
     const emailListArray = emailList.split(' ')
     for (let i = 0; i < emailListArray.length; i++) {
-        if (emailListArray[i].includes('gmail')) {
-            continue
-        }
-        let gmailGuess = emailListArray[i]
+        let emailHandle = emailListArray[i]
             .split('@')
             .shift()
             .toLowerCase()
-        if (gmailGuessFilter.includes(gmailGuess)) {
+        if (emailGuessFilter.includes(emailHandle) || !emailHandle) {
             continue
         }
-        gmailGuess = gmailGuess.replaceAll('-', '.').replaceAll('_', '.')
-        if (gmailGuess) gmailGuess = `${gmailGuess}@gmail.com`
-        if (emailList.includes(gmailGuess)) {
-            continue
+
+        for (let i = 0; i < emailDomains.length; i++) {
+            const emailDomain = emailDomains[i]
+            let editedEmailHandle = emailHandle
+            if (emailDomain.includes('gmail') || emailDomain.includes('googlemail')) {
+                editedEmailHandle = emailHandle
+                    .replaceAll('-', '.')
+                    .replaceAll('_', '.')
+            }
+            let emailGuess
+            if (editedEmailHandle) emailGuess = `${editedEmailHandle}@${emailDomain}`
+            if (emailList.includes(emailGuess)) {
+                continue
+            }
+            emailList = `${emailList} ${emailGuess}`
         }
-        emailList = `${emailList} ${gmailGuess}`
     }
     return emailList
 }
