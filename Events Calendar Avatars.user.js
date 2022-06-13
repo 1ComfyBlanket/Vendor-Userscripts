@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.45
+// @version      2.46
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
 // @match        https://lh3.googleusercontent.com/*
 // @match        https://acornapp.net/portal/home*
 // @match        https://acornapp.net/portal/review*
+// @match        https://www.acorntech.io/portal/home*
+// @match        https://www.acorntech.io/portal/review*
 // @match        http://localhost:8083/*
 // @match        https://getcovey.com/covey/admin*
 // @match        http://localhost:8080/covey/admin*
@@ -616,6 +618,7 @@ function upscaleAvatars() {
 
 if (
     location.hostname === 'acornapp.net' ||
+    location.hostname.includes('acorntech.io') ||
     location.href.includes('localhost:8083')
 ) {
     GM.setValue('currentLinkedinHandle', '')
