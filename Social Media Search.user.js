@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.4.5
+// @version      1.4.6
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
 // @grant        none
 // @match        https://acornapp.net/portal/home*
 // @match        https://acornapp.net/portal/review*
+// @match        https://www.acorntech.io/portal/home*
+// @match        https://www.acorntech.io/portal/review*
 // @match        https://www.instagram.com/*
 // @match        https://www.pinterest.com/*
 // @match        https://twitter.com/*
@@ -233,7 +235,10 @@ function missingProfile() {
             break
     }
 }
-if (location.hostname !== 'acornapp.net') {
+if (
+    location.hostname !== 'acornapp.net' &&
+    !location.hostname.includes('acorntech.io')
+) {
     missingProfile()
 }
 
@@ -394,7 +399,10 @@ function createSocialMediaButton() {
     emailHandle = emailSection()
 }
 
-if (location.hostname.includes('acornapp.net')) {
+if (
+    location.hostname.includes('acornapp.net') ||
+    location.hostname.includes('acorntech.io')
+) {
     setInterval(() => {
         emailTask()
     }, 100)
