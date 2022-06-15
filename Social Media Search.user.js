@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.4.6
+// @version      1.5.0
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
@@ -24,6 +24,7 @@
 // @match        https://medium.com/*
 // @match        https://dribbble.com/*
 // @match        https://www.behance.net/*
+// @match        https://keybase.io/*
 // ==/UserScript==
 
 const SEARCH_BUTTON_CSS_CLASS = 'searchButton'
@@ -69,14 +70,8 @@ addGlobalStyle(`
 function searchEmail() {
     const emailHandle = this.nextSibling.value.split('@', 1)[0]
     // Some websites do not accept usernames with periods or incorrectly parse them
-    let emailHandlePeriod = false
-    if (emailHandle.includes('.')) {
-        emailHandlePeriod = true
-    }
-    if (emailHandlePeriod === false) {
-        window.open(`https://www.github.com/${emailHandle}`)
-        window.open(`https://dribbble.com/${emailHandle}`)
-    }
+    const cleanedEmailHandle = emailHandle.split('.').join('')
+
     window.open(`https://www.instagram.com/${emailHandle}`)
     window.open(`https://www.pinterest.com/${emailHandle}`)
     window.open(`https://www.twitter.com/${emailHandle}`)
@@ -89,6 +84,9 @@ function searchEmail() {
     window.open(`https://www.tripadvisor.com/Profile/${emailHandle}`)
     window.open(`https://www.medium.com/@${emailHandle}/about`)
     window.open(`https://www.behance.net/${emailHandle}`)
+    window.open(`https://www.github.com/${cleanedEmailHandle}`)
+    window.open(`https://dribbble.com/${cleanedEmailHandle}`)
+    window.open(`https://keybase.io/${cleanedEmailHandle}`)
 }
 
 function googleEmail() {
@@ -103,7 +101,7 @@ function googleEmail() {
 }
 
 // Element and string to search for to determine if a profile is missing
-function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
+function missingProfileElement(elementClass, stringReturn, exactMatch = false) {
     function closeClear() {
         close()
         clearInterval(intervalCheck)
@@ -114,7 +112,7 @@ function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
     const intervalCheck = setInterval(() => {
         // If exactMatch is enabled then make sure the string is exactly the same, otherwise just loosely search
         // for the string within the element
-        if (exactMatch === 0) {
+        if (!exactMatch) {
             const elements = elementArray()
             for (let element of elements) {
                 if (element.innerText) {
@@ -162,13 +160,12 @@ function missingProfileElement(elementClass, stringReturn, exactMatch = 0) {
 function missingProfile() {
     switch (location.hostname) {
         case 'www.instagram.com':
-            missingProfileElement('', `Page Not Found • Instagram`)
-            missingProfileElement('', `Content Unavailable • Instagram`)
-            missingProfileElement('', `Página no encontrada • Instagram`)
-            missingProfileElement('', `Contenido no disponible • Instagram`)
+            missingProfileElement('', `Page not found`)
+            missingProfileElement('', `Página no encontrada`)
+            missingProfileElement('', `Contenido no disponible`)
             break
         case 'www.pinterest.com':
-            missingProfileElement('', `show_error=true`)
+            missingProfileElement('', `ideas`)
             break
         case 'twitter.com':
             missingProfileElement(
@@ -181,17 +178,18 @@ function missingProfile() {
             )
             break
         case 'github.com':
-            missingProfileElement('blue-button text-button', `Reload`)
             missingProfileElement(
-                'd-block text-normal color-text-secondary mb-1 f4',
+                'd-block text-normal color-fg-muted mb-1 f4',
                 `Find code, projects, and people on GitHub:`
             )
             break
         case 'www.tiktok.com':
-            missingProfileElement('jsx-1517828681', `404_face_icon`)
-            missingProfileElement('jsx-3565499374', `No encontramos esta cuenta`)
             missingProfileElement(
-                'jsx-2275266356 title',
+                'tiktok-143utqi-PTitle emuynwa1',
+                `No encontramos esta cuenta`
+            )
+            missingProfileElement(
+                'tiktok-143utqi-PTitle emuynwa1',
                 `Couldn't find this account`
             )
             break
@@ -218,7 +216,7 @@ function missingProfile() {
             break
         case 'medium.com':
             missingProfileElement(
-                'dc dd de df dg dh di dj dk dl dm dn da b do dp dq',
+                'gt gu gv gw gx gy gz ha hb hc hd he gr b hf hg hh',
                 `404`
             )
             missingProfileElement(
@@ -232,6 +230,9 @@ function missingProfile() {
         case 'www.behance.net':
             missingProfileElement('', `Behance :: Oops! We can’t find that page.`)
             missingProfileElement('', `¡Vaya! No ha sido`)
+            break
+        case 'keybase.io':
+            missingProfileElement('container', `Oy!`)
             break
     }
 }
