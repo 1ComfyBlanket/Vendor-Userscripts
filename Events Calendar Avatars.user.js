@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.47
+// @version      2.48
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -482,6 +482,7 @@ if (location.hostname === 'calendar.google.com') {
             createButtons()
         }
     }, 10)
+    GM.setValue('removeEmailsWithoutAvatarFromList', false)
     setInterval(autoEmailInput, 200)
     setInterval(upscaleAvatars, 200)
     setInterval(storeGcalEmails, 200)
