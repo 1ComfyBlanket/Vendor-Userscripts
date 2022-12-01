@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.48
+// @version      2.5
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -63,7 +63,7 @@ addGlobalStyle(`
         color:#ffffff;
         font-family:Arial;
         font-size:13px;
-        padding:0px 8px;
+        padding:8px 8px;
         text-decoration:none;
         text-shadow:0px 1px 0px #154682;
         margin-left: 5px;
@@ -99,7 +99,7 @@ addGlobalStyle(`
 
 // "kx3Hed" is the guest tab in Gcal
 function guestTab() {
-    return document.getElementsByClassName('kx3Hed')
+    return document.getElementsByClassName('VfPpkd-AznF2e-ZMv3u UYwjnf Aal35c')
 }
 
 // "Ax4B8 ZAGvjd" is the "Create contact" in Contacts
@@ -122,6 +122,11 @@ function userEmail() {
 // "kMp0We Wm6kRe YaPvld USzdTb X4Mf1d" is the Gcal email list starting from the email row element
 function emailRows() {
     return document.getElementsByClassName('kMp0We Wm6kRe YaPvld K8SUFe X4Mf1d')
+}
+
+// Return the remove button from the given emailRow
+function removeEmailButton(emailRow) {
+    return emailRow.children[2].children[0].children[2].children[0]
 }
 
 // Create and place buttons
@@ -355,7 +360,7 @@ async function removeEmailsWithoutAvatarFromList() {
                 const emailInGcalList = gcalEmailList.some(e => e.email === email)
                 const emailInContactList = contactEmailList.some(e => e.email === email)
                 if (!emailInGcalList && !emailInContactList) {
-                    const removeButton = emailRow.children[2].children[0].children[2]
+                    const removeButton = removeEmailButton(email)
                     emailsWithNoAvatar.unshift(removeButton)
                 }
             }
@@ -396,8 +401,8 @@ async function pasteEmailList() {
         GM.setValue('gcalToAcornCopyEmails', false)
         const emailList = await GM.getValue('contactEmailList')
         const googleContactsInput = document.getElementById('google-contacts-input')
-        googleContactsInput.focus()
-        googleContactsInput.select()
+        googleContactsInput?.focus()
+        googleContactsInput?.select()
         document.execCommand('insertText', false, emailList)
     }
 }
@@ -406,7 +411,8 @@ function clearEmailList() {
     const emails = emailRows()
     const removeButtons = []
     for (let email of emails) {
-        removeButtons.unshift(email.children[2].children[0].children[2])
+        const removeButton = removeEmailButton(email)
+        removeButtons.unshift(removeButton)
     }
     removeButtons.forEach(b => b.click())
 }
@@ -467,8 +473,8 @@ async function autoEmailInput() {
             input = input[i]
         }
     }
-    input.focus()
-    input.select()
+    input?.focus()
+    input?.select()
     document.execCommand('insertText', false, emails)
     const enter = new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' })
     input.dispatchEvent(enter)
