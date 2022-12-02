@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.5
+// @version      2.51
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -99,7 +99,10 @@ addGlobalStyle(`
 
 // "kx3Hed" is the guest tab in Gcal
 function guestTab() {
-    return document.getElementsByClassName('VfPpkd-AznF2e-ZMv3u UYwjnf Aal35c')
+    const div = document.getElementsByClassName('C32Mpb Zlotdb')[0]
+    const guestTab = div.children[1].children[0]
+    console.log(guestTab)
+    return guestTab
 }
 
 // "Ax4B8 ZAGvjd" is the "Create contact" in Contacts
@@ -135,7 +138,7 @@ function createButtons() {
     const openAvatarsButton = document.createElement('a')
     openAvatarsButton.addEventListener('click', openImages, false)
     openAvatarsButton.appendChild(document.createTextNode('Open Images'))
-    const openAvatar = guestTab()[0]
+    const openAvatar = guestTab()
     openAvatar.parentNode.insertBefore(openAvatarsButton, openAvatar)
     openAvatarsButton.className = SEARCH_BUTTON_CSS_CLASS
 
@@ -483,7 +486,7 @@ async function autoEmailInput() {
 if (location.hostname === 'calendar.google.com') {
     // Wait until guest tab exists
     const waitUntilGuestTab = setInterval(() => {
-        if (guestTab().length) {
+        if (guestTab()) {
             clearInterval(waitUntilGuestTab)
             createButtons()
         }
