@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.51
+// @version      2.52
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -101,7 +101,6 @@ addGlobalStyle(`
 function guestTab() {
     const div = document.getElementsByClassName('C32Mpb Zlotdb')[0]
     const guestTab = div.children[1].children[0]
-    console.log(guestTab)
     return guestTab
 }
 
@@ -124,7 +123,7 @@ function userEmail() {
 
 // "kMp0We Wm6kRe YaPvld USzdTb X4Mf1d" is the Gcal email list starting from the email row element
 function emailRows() {
-    return document.getElementsByClassName('kMp0We Wm6kRe YaPvld K8SUFe X4Mf1d')
+    return document.getElementsByClassName('Wm6kRe YaPvld K8SUFe X4Mf1d')
 }
 
 // Return the remove button from the given emailRow
