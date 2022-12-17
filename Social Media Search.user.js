@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.5.0
+// @version      1.5.1
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
@@ -10,6 +10,8 @@
 // @match        https://acornapp.net/portal/review*
 // @match        https://www.acorntech.io/portal/home*
 // @match        https://www.acorntech.io/portal/review*
+// @match        http://localhost:8083//portal/home*
+// @match        http://localhost:8083//portal/review*
 // @match        https://www.instagram.com/*
 // @match        https://www.pinterest.com/*
 // @match        https://twitter.com/*
@@ -238,7 +240,8 @@ function missingProfile() {
 }
 if (
     location.hostname !== 'acornapp.net' &&
-    !location.hostname.includes('acorntech.io')
+    !location.hostname.includes('acorntech.io') &&
+    !location.href.includes('localhost:8083')
 ) {
     missingProfile()
 }
@@ -288,7 +291,7 @@ function clearOldButtons() {
     ) {
         return
     }
-    emailFinderTab = emailFinderTabArray()[0].children[0].className
+    emailFinderTab = emailFinderTabArray()[0]?.children[0]?.className
     if (
         emailHandle !== emailSection() ||
         emailSectionArrayLength !== emailSectionArray.length
@@ -402,7 +405,8 @@ function createSocialMediaButton() {
 
 if (
     location.hostname.includes('acornapp.net') ||
-    location.hostname.includes('acorntech.io')
+    location.hostname.includes('acorntech.io') ||
+    location.href.includes('localhost:8083')
 ) {
     setInterval(() => {
         emailTask()
