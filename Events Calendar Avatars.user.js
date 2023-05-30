@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.53
+// @version      2.6
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -267,6 +267,21 @@ function hoverCardOpenEmailAvatar() {
  ********/
 
 async function storeSidebarContactsEmails() {
+    /*
+     * Contacts sidebar shrinks contents to fit into user's screen
+     * This is to allow all email rows to load as they can't be
+     * extracted if they're culled for being too far off the screen
+     * */
+    const html = document.getElementsByTagName('html')[0]
+    const emailListContainer = document.getElementsByClassName('gTiOTb C8Dkz')[0]
+    let emailListHeight = emailListContainer?.style?.height
+    if (emailListHeight) {
+        emailListHeight = emailListHeight.substring(0, emailListHeight.length - 2)
+        const windowHeight = window.innerHeight
+        const zoom = windowHeight / emailListHeight
+        html.style.zoom = zoom < 1 ? zoom : 1
+    }
+
     const emailRows = document.getElementsByClassName('hRP3bd')
     const user = await GM.getValue('userEmail', '')
     let emailList = []
@@ -308,11 +323,10 @@ async function storeGcalEmails() {
     const user = await GM.getValue('userEmail', '')
     let emailList = []
     for (let i = 0; i < emailRows.length; i++) {
-        const email = emailRows[
-            i
-            ].parentElement.parentElement.parentElement.getAttribute(
-            'data-hovercard-id'
-        )
+        const email =
+            emailRows[i].parentElement.parentElement.parentElement.getAttribute(
+                'data-hovercard-id'
+            )
         let imageUrl = emailRows[i]
             .getAttribute('style')
             .split('"')[1]
@@ -695,10 +709,7 @@ function gmailGuess(emailList) {
         if (emailListArray[i].includes('gmail')) {
             continue
         }
-        let gmailGuess = emailListArray[i]
-            .split('@')
-            .shift()
-            .toLowerCase()
+        let gmailGuess = emailListArray[i].split('@').shift().toLowerCase()
         if (gmailGuessFilter.includes(gmailGuess)) {
             continue
         }
