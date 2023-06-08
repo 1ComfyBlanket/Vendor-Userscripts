@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      2.61
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -121,7 +121,7 @@ function userEmail() {
         ?.getAttribute('aria-label')
 }
 
-// "kMp0We Wm6kRe YaPvld USzdTb X4Mf1d" is the Gcal email list starting from the email row element
+// "nBzcnc Wm6kRe Zce9sc K8SUFe X4Mf1d" is the Gcal email list starting from the email row element
 function emailRows() {
     return document.getElementsByClassName('nBzcnc Wm6kRe Zce9sc K8SUFe X4Mf1d')
 }
@@ -129,6 +129,14 @@ function emailRows() {
 // Return the remove button from the given emailRow
 function removeEmailButton(emailRow) {
     return emailRow.children[2].children[0].children[2].children[0]
+}
+
+// "VfPpkd-fmcmS-wGMbrd" is the Gcal email input field
+function emailInputField() {
+    return (
+        document.getElementsByClassName('VfPpkd-fmcmS-wGMbrd') ??
+        document.getElementsByClassName('whsOnd zHQkBf')
+    )
 }
 
 // Create and place buttons
@@ -480,7 +488,7 @@ async function autoEmailInput() {
     await removeEmailsWithoutAvatarFromList()
 
     // Returns both location and guest input field and selects the field that is 320px wide as that is the email field
-    let input = document.getElementsByClassName('whsOnd zHQkBf')
+    let input = emailInputField()
     for (let i = 0; i < input.length; i++) {
         if (!input[i]) {
             continue
