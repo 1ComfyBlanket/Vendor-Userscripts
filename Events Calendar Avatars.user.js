@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.62
+// @version      2.63
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -10,8 +10,8 @@
 // @match        https://acornapp.net/portal/review*
 // @match        https://www.acorntech.io/portal/home*
 // @match        https://www.acorntech.io/portal/review*
-// @match        https://www.acorntech.org/portal/home*
-// @match        https://www.acorntech.org/portal/review*
+// @match        https://acorntech.org/portal/home*
+// @match        https://acorntech.org/portal/review*
 // @match        http://localhost:8083/*
 // @match        https://getcovey.com/covey/admin*
 // @match        http://localhost:8080/covey/admin*

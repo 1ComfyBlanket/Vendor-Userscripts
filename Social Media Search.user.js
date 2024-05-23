@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Social Media Search
 // @namespace    http://tampermonkey.net/
-// @version      1.5.2
+// @version      1.5.3
 // @description  For searching email handles on various social media sites in a single click.
 // @author       Wilbert Siojo
 // @icon         https://www.google.com/s2/favicons?domain=simply-how.com
@@ -10,8 +10,8 @@
 // @match        https://acornapp.net/portal/review*
 // @match        https://www.acorntech.io/portal/home*
 // @match        https://www.acorntech.io/portal/review*
-// @match        https://www.acorntech.org/portal/home*
-// @match        https://www.acorntech.org/portal/review*
+// @match        https://acorntech.org/portal/home*
+// @match        https://acorntech.org/portal/review*
 // @match        http://localhost:8083//portal/home*
 // @match        http://localhost:8083//portal/review*
 // @match        https://www.instagram.com/*
