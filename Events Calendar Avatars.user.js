@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.63
+// @version      2.65
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -113,14 +113,14 @@ function contactSearchBar() {
 
 // "jPtXgd" is all of the listed email avatars
 function emailAvatars() {
-  return document.getElementsByClassName('jPtXgd')
+  return document.getElementsByClassName('xsCLGd')
 }
 
 // "gb_C gb_Ma gb_h" is the user account tab that contains the logged in user's name and email
 function userEmail() {
   return document
-    .getElementsByClassName('gb_C gb_Ma gb_h')[0]
-    ?.getAttribute('aria-label')
+      .getElementsByClassName('gb_d gb_ya gb_z')[0]
+      ?.getAttribute('aria-label')
 }
 
 // "nBzcnc Wm6kRe Zce9sc K8SUFe X4Mf1d" is the Gcal email list starting from the email row element
@@ -135,10 +135,23 @@ function removeEmailButton(emailRow) {
 
 // "VfPpkd-fmcmS-wGMbrd" is the Gcal email input field
 function emailInputField() {
-  return (
-    document.getElementsByClassName('VfPpkd-fmcmS-wGMbrd') ??
-    document.getElementsByClassName('whsOnd zHQkBf')
-  )
+  let input = document.querySelector('[placeholder = "Add guests"]')
+  if (!input) {
+    input =
+        document.getElementsByClassName('VfPpkd-fmcmS-wGMbrd') ??
+        document.getElementsByClassName('whsOnd zHQkBf')
+
+    for (let i = 0; i < input.length; i++) {
+      if (!input[i]) {
+        continue
+      }
+      if (input[i].offsetWidth === 320) {
+        input = input[i]
+      }
+    }
+  }
+
+  return input
 }
 
 // Create and place buttons
@@ -154,11 +167,11 @@ function createButtons() {
   // "Copy Contacts" button
   const copyEmailsButton = document.createElement('a')
   copyEmailsButton.addEventListener(
-    'click',
-    () => {
-      GM.setValue('gcalToAcornCopyEmails', true)
-    },
-    false
+      'click',
+      () => {
+        GM.setValue('gcalToAcornCopyEmails', true)
+      },
+      false
   )
   copyEmailsButton.appendChild(document.createTextNode('Copy Contacts'))
   openAvatar.parentNode.insertBefore(copyEmailsButton, openAvatar)
@@ -176,8 +189,8 @@ function createButtons() {
 function contactCreateButton() {
   // Prevent multiple buttons from being made
   if (
-    !contactSearchBar().length ||
-    contactSearchBar()[0].parentNode.children.length > 1
+      !contactSearchBar().length ||
+      contactSearchBar()[0].parentNode.children.length > 1
   ) {
     return
   }
@@ -193,18 +206,18 @@ function contactCreateButton() {
 
 function contactOpenEmailAvatars() {
   document.querySelector(
-    '#yDmH0d > c-wiz > div.QkOsze > div:nth-child(6) > div:nth-child(2) > div > div > div > div.E6Tb7b.psZcEd > div.v2jl3d > svg.NSy2Hd.cdByRd.RTiFqe.IRJKEb'
+      '#yDmH0d > c-wiz > div.QkOsze > div:nth-child(6) > div:nth-child(2) > div > div > div > div.E6Tb7b.psZcEd > div.v2jl3d > svg.NSy2Hd.cdByRd.RTiFqe.IRJKEb'
   ).click
   const imageArray = document.getElementsByClassName('i0Sdn')
   const uniqueImages = []
   for (let i = 0; i < imageArray.length; i++) {
     // Retrieve email
     let email =
-      imageArray[i].parentElement.nextSibling.nextSibling.children[0].innerText
+        imageArray[i].parentElement.nextSibling.nextSibling.children[0].innerText
     // Retrieve avatar URL
     let imageLink = imageArray[i].nextSibling.outerHTML
-      .split('"')[5]
-      .split('s36')
+        .split('"')[5]
+        .split('s36')
     imageLink = `${imageLink[0]}${ORIGINAL_AVATAR_SIZE}`
     if (uniqueImages.includes(imageLink)) {
       continue
@@ -304,18 +317,18 @@ async function storeSidebarContactsEmails() {
       const email = emails[i].innerText
       emailList.push({ email: email, avatar: imageUrl })
       if (
-        email.includes('@') &&
-        !imageUrl.includes(DEFAULT_USER_AVATAR) &&
-        !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
-        !imageUrl.includes('gstatic.com') &&
-        !user.includes(email)
+          email.includes('@') &&
+          !imageUrl.includes(DEFAULT_USER_AVATAR) &&
+          !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
+          !imageUrl.includes('gstatic.com') &&
+          !user.includes(email)
       ) {
         emailListFiltered.push({ email: email, avatar: imageUrl })
       }
       if (
-        i === 0 ||
-        emails[0].innerText === emails[1].innerText ||
-        !emails[0].innerText.includes('@')
+          i === 0 ||
+          emails[0].innerText === emails[1].innerText ||
+          !emails[0].innerText.includes('@')
       ) {
         continue
       }
@@ -334,18 +347,18 @@ async function storeGcalEmails() {
   let emailList = []
   for (let i = 0; i < emailRows.length; i++) {
     const email =
-      emailRows[i].parentElement.parentElement.parentElement.getAttribute(
-        'data-hovercard-id'
-      )
+        emailRows[i].parentElement.parentElement.parentElement.getAttribute(
+            'data-hovercard-id'
+        )
     let imageUrl = emailRows[i]
-      .getAttribute('style')
-      .split('"')[1]
-      .split('=')[0]
+        .getAttribute('style')
+        .split('"')[1]
+        .split('=')[0]
     imageUrl = `${imageUrl}=${ORIGINAL_AVATAR_SIZE}`
     if (
-      !imageUrl.includes(DEFAULT_USER_AVATAR) &&
-      !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
-      !user.includes(email)
+        !imageUrl.includes(DEFAULT_USER_AVATAR) &&
+        !imageUrl.includes(DEFAULT_INITIAL_AVATAR) &&
+        !user.includes(email)
     ) {
       emailList.push({ email: email, avatar: imageUrl })
     }
@@ -360,7 +373,7 @@ async function storeGcalEmails() {
 
 async function removeEmailsWithoutAvatarFromList() {
   const functionInProgress = await GM.getValue(
-    'removeEmailsWithoutAvatarFromList'
+      'removeEmailsWithoutAvatarFromList'
   )
   if (functionInProgress) {
     return
@@ -375,7 +388,7 @@ async function removeEmailsWithoutAvatarFromList() {
     setTimeout(async () => {
       const gcalEmailListString = await GM.getValue('gcalEmailList')
       const contactEmailListString = await GM.getValue(
-        'contactEmailListFiltered'
+          'contactEmailListFiltered'
       )
       const gcalEmailList = JSON.parse(gcalEmailListString)
       const contactEmailList = JSON.parse(contactEmailListString)
@@ -450,11 +463,11 @@ async function copyEmailClipboard() {
   for (let i = 0; i < email.length; i++) {
     const copyEmail = document.createElement('a')
     copyEmail.addEventListener(
-      'click',
-      () => {
-        GM.setClipboard(email[i])
-      },
-      false
+        'click',
+        () => {
+          GM.setClipboard(email[i])
+        },
+        false
     )
     copyEmail.appendChild(document.createTextNode(email[i]))
     const emailPosition = document.getElementsByTagName('body')[0]
@@ -467,11 +480,11 @@ async function copyEmailClipboard() {
 function reverseImageSearchButton() {
   const imageSearch = document.createElement('a')
   imageSearch.addEventListener(
-    'click',
-    () => {
-      window.open(`https://www.google.com/searchbyimage?&image_url=${location}`)
-    },
-    false
+      'click',
+      () => {
+        window.open(`https://www.google.com/searchbyimage?&image_url=${location}`)
+      },
+      false
   )
   imageSearch.appendChild(document.createTextNode('Image Search'))
   const emailPosition = document.getElementsByTagName('body')[0]
@@ -491,14 +504,6 @@ async function autoEmailInput() {
 
   // Returns both location and guest input field and selects the field that is 320px wide as that is the email field
   let input = emailInputField()
-  for (let i = 0; i < input.length; i++) {
-    if (!input[i]) {
-      continue
-    }
-    if (input[i].offsetWidth === 320) {
-      input = input[i]
-    }
-  }
   input?.focus()
   input?.select()
   document.execCommand('insertText', false, emails)
@@ -533,7 +538,7 @@ if (location.hostname.includes('contacts')) {
   setInterval(contactCreateButton, 200)
   setTimeout(() => {
     document.querySelector(
-      '#yDmH0d > c-wiz > div.QkOsze > div:nth-child(6) > div:nth-child(2) > div > div > div > div.E6Tb7b.psZcEd > div.v2jl3d > svg.NSy2Hd.cdByRd.RTiFqe.IRJKEb'
+        '#yDmH0d > c-wiz > div.QkOsze > div:nth-child(6) > div:nth-child(2) > div > div > div > div.E6Tb7b.psZcEd > div.v2jl3d > svg.NSy2Hd.cdByRd.RTiFqe.IRJKEb'
     ).click
   }, 3000)
   setInterval(hoverCardAvatarButton, 200)
@@ -571,9 +576,9 @@ let copyEmailsButton
 function copyEmails() {
   // Add event handler to "Copy Emails" button
   copyEmailsButton =
-    document.querySelector(
-      '#react-root > div > div > div > div.flex.flex-col.min-w-0.flex-1.overflow-hidden > div > main > article > div.mx-auto.pb-24 > div > div.fixed.bg-white.py-4.px-8.z-10.border-b.border-b-eee > div > div.ml-6.mt-0\\.5 > div'
-    ) ?? document.getElementById('copy-emails-button')
+      document.querySelector(
+          '#react-root > div > div > div > div.flex.flex-col.min-w-0.flex-1.overflow-hidden > div > main > article > div.mx-auto.pb-24 > div > div.fixed.bg-white.py-4.px-8.z-10.border-b.border-b-eee > div > div.ml-6.mt-0\\.5 > div'
+      ) ?? document.getElementById('copy-emails-button')
   if (!copyEmailsButton) {
     return
   }
@@ -595,12 +600,12 @@ function setLinkedinHandleValue() {
     return
   }
   const linkedinButton = document.getElementsByClassName(
-    'inline-block text-center rounded-sm align-text-top cursor-pointer ml-2'
+      'inline-block text-center rounded-sm align-text-top cursor-pointer ml-2'
   )[0]
   const extensionTask =
-    document.getElementsByClassName(
-      'text-lg leading-6 font-medium text-gray-900'
-    )[0]?.innerText === 'LinkedIn Profile'
+      document.getElementsByClassName(
+          'text-lg leading-6 font-medium text-gray-900'
+      )[0]?.innerText === 'LinkedIn Profile'
   if (!linkedinButton || !extensionTask) {
     GM.setValue('currentLinkedinHandle', '')
     return
@@ -612,9 +617,9 @@ function setLinkedinHandleValue() {
 async function closeLinkedInTab() {
   const linkedinHandle = await GM.getValue('currentLinkedinHandle')
   if (
-    !window.location.href.includes(linkedinHandle) &&
-    linkedinHandle &&
-    !document.hasFocus()
+      !window.location.href.includes(linkedinHandle) &&
+      linkedinHandle &&
+      !document.hasFocus()
   ) {
     GM.setClipboard('WRONG PROFILE, CHECK AGAIN')
     window.close()
@@ -629,31 +634,31 @@ function upscaleAvatars() {
   const defaultRes = 's24'
   for (let avatar of avatars) {
     if (
-      !avatar.outerHTML.includes(defaultRes) ||
-      avatar.outerHTML.includes(DEFAULT_USER_AVATAR)
+        !avatar.outerHTML.includes(defaultRes) ||
+        avatar.outerHTML.includes(DEFAULT_USER_AVATAR)
     ) {
       continue
     }
     const imageUpscale = avatar.getAttribute('style').split(defaultRes)
     avatar.setAttribute(
-      'style',
-      `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
+        'style',
+        `${imageUpscale[0]}${upscaleRes}${imageUpscale[1]}`
     )
     const imageParentUpscale = avatar.parentElement
-      .getAttribute('style')
-      .split('24px;')
+        .getAttribute('style')
+        .split('24px;')
     avatar.parentElement.setAttribute(
-      'style',
-      `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;`
+        'style',
+        `${imageParentUpscale[0]}40px;${imageParentUpscale[1]}40px;`
     )
   }
 }
 
 if (
-  location.hostname === 'acornapp.net' ||
-  location.hostname.includes('acorntech.io') ||
-  location.hostname.includes('acorntech.org') ||
-  location.href.includes('localhost:8083')
+    location.hostname === 'acornapp.net' ||
+    location.hostname.includes('acorntech.io') ||
+    location.hostname.includes('acorntech.org') ||
+    location.href.includes('localhost:8083')
 ) {
   GM.setValue('currentLinkedinHandle', '')
   setInterval(copyEmails, 100)
@@ -672,7 +677,7 @@ if (location.hostname === 'www.linkedin.com') {
 function copyEmailsAdmin() {
   // Add event handler to "Copy Emails" button
   copyEmailsButton = document.getElementsByClassName(
-    'border-3 ml-3 pr-1 pl-2 py-2 focus:no-underline focus:text-gray-333 hover:text-gray-333 hover:shadow-lg hover:no-underline rounded-lg border-gray-333 font-semibold text-lg text-gray-333'
+      'border-3 ml-3 pr-1 pl-2 py-2 focus:no-underline focus:text-gray-333 hover:text-gray-333 hover:shadow-lg hover:no-underline rounded-lg border-gray-333 font-semibold text-lg text-gray-333'
   )[0]
   if (!copyEmailsButton) {
     return
@@ -699,8 +704,8 @@ function openCalendarAdmin() {
 }
 
 if (
-  location.href.includes('https://getcovey.com/covey/admin') ||
-  location.href.includes('localhost:8080')
+    location.href.includes('https://getcovey.com/covey/admin') ||
+    location.href.includes('localhost:8080')
 ) {
   setInterval(copyEmailsAdmin, 100)
 }
