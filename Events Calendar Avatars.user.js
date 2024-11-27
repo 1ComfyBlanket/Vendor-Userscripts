@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Events Calendar Avatars
 // @namespace    http://tampermonkey.net/
-// @version      2.65
+// @version      2.66
 // @description  Retrieve Google events calendar avatars at a higher resolution with much fewer inputs.
 // @author       Wilbert Siojo
 // @match        https://calendar.google.com/calendar/*
@@ -133,9 +133,19 @@ function removeEmailButton(emailRow) {
   return emailRow.children[2].children[0].children[2].children[0]
 }
 
-// "VfPpkd-fmcmS-wGMbrd" is the Gcal email input field
+// Capture the Gcal email input field by either placeholder text or classname
 function emailInputField() {
-  let input = document.querySelector('[placeholder = "Add guests"]')
+  const placeholderLanguages = [
+    'Add guests',
+    'Añadir invitados',
+    'Agregar invitados',
+    'Magdagdag ng mga bisita',
+  ]
+  let input
+  placeholderLanguages.some(placeholder => {
+    input = document.querySelector(`[placeholder = "${placeholder}"]`)
+    return input
+  })
   if (!input) {
     input =
         document.getElementsByClassName('VfPpkd-fmcmS-wGMbrd') ??
